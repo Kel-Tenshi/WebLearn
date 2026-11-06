@@ -22,14 +22,29 @@ app.use(
   })
 );
 
-
-// Подключение REST API роутеров для всех 12 сущностей
+// Подключение REST API роутеров
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
 app.use('/api/equipment', equipmentRouter);
 app.use('/api/requests', requestsRouter);
 app.use('/api/directory', directoryRouter);
 app.use('/api/operations', opsRouter);
+
+// Перехват неизвестных маршрутов (404)
+app.use((req, res) => {
+  res.status(404).json({
+    message: `Маршрут ${req.method} ${req.originalUrl} не найден на сервере`
+  });
+});
+
+// Глобальный перехватчик внутренних ошибок (500)
+app.use((err, req, res, next) => {
+  console.error('SERVER EXCEPTION:', err);
+  const status = err.status || 500;
+  res.status(status).json({
+    message: err.message || 'Внутренняя непредвиденная ошибка сервера'
+  });
+});
 
 const port = process.env.PORT || 5000;
 

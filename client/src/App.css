@@ -400,3 +400,149 @@ button.danger {
   justify-content: center;
   gap: 12px;
 }
+
+/* ============================================================ */
+/* Кастомные валидационные тултипы полей                        */
+/* ============================================================ */
+
+.field-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: top;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.field-control {
+  position: relative;
+  display: inline-block;
+}
+
+.field-wrapper.has-error input,
+.field-wrapper.has-error select {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.field-tooltip {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 0;
+  background: #b91c1c;
+  color: #ffffff;
+  padding: 5px 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: tooltipFade 0.15s ease-out;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #b91c1c;
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================ */
+/* Кастомные плашки системных ошибок (400, 403, 500)            */
+/* ============================================================ */
+
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  max-width: 400px;
+}
+
+.toast-card {
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+}
+
+.toast-card:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+.toast-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.toast-badge {
+  background: rgba(0, 0, 0, 0.28);
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.toast-title {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.toast-body {
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-error {
+  background: #dc2626;
+  border-left: 5px solid #7f1d1d;
+}
+
+.toast-warning {
+  background: #d97706;
+  border-left: 5px solid #78350f;
+}
+
+.toast-info {
+  background: #0284c7;
+  border-left: 5px solid #075985;
+}
+
+.toast-success {
+  background: #16a34a;
+  border-left: 5px solid #14532d;
+}
