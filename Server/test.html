@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>API Tester</title>
+</head>
+<body>
+  <h1>Тестирование API</h1>
+
+  <div>
+    <label>Сервер: <input id="serverUrl" type="text" value="http://127.0.0.1:5000" style="width: 250px;"></label>
+  </div>
+
+  <hr>
+
+  <!-- 1. Авторизация и профиль -->
+  <fieldset>
+    <legend>1. Авторизация (/auth, /user)</legend>
+    <input id="login" placeholder="Логин" value="admin">
+    <input id="password" type="password" placeholder="Пароль" value="admin123">
+    <button onclick="api('/auth/login', 'POST', { login: val('login'), password: val('password') })">Войти</button>
+    <button onclick="api('/user/register', 'POST', { login: val('login'), password: val('password') })">Регистрация</button>
+    <button onclick="api('/auth/logout', 'DELETE')">Выйти</button>
+    <button onclick="api('/user/me', 'GET')">Кто я (/user/me)</button>
+  </fieldset>
+
+  <!-- 2. Оборудование -->
+  <fieldset>
+    <legend>2. Оборудование (/api/equipment)</legend>
+    <button onclick="api('/api/equipment', 'GET')">Получить всё оборудование</button>
+    <br><br>
+    <input id="eqInv" placeholder="Инв. №" value="ИНВ-999999">
+    <input id="eqName" placeholder="Название" value="Тестовый стенд">
+    <button onclick="api('/api/equipment', 'POST', { invNumber: val('eqInv'), name: val('eqName') })">Добавить</button>
+    <br><br>
+    <input id="eqId" placeholder="ID оборудования" style="width: 60px;">
+    <button onclick="api('/api/equipment/' + val('eqId'), 'GET')">По ID</button>
+    <button onclick="api('/api/equipment/' + val('eqId'), 'DELETE')">Удалить</button>
+  </fieldset>
+
+  <!-- 3. Заявки -->
+  <fieldset>
+    <legend>3. Заявки (/api/requests)</legend>
+    <button onclick="api('/api/requests', 'GET')">Список заявок</button>
+    <br><br>
+    <input id="reqTitle" placeholder="Тема заявки" value="Срочная замена масла">
+    <button onclick="api('/api/requests', 'POST', { type: 'Ремонт', title: val('reqTitle'), priority: 'Высокий' })">Создать заявку</button>
+  </fieldset>
+
+  <!-- 4. Справочники -->
+  <fieldset>
+    <legend>4. Справочники (/api/directory)</legend>
+    <button onclick="api('/api/directory/departments', 'GET')">Подразделения</button>
+    <button onclick="api('/api/directory/locations', 'GET')">Локации</button>
+    <button onclick="api('/api/directory/categories', 'GET')">Категории</button>
+    <button onclick="api('/api/directory/suppliers', 'GET')">Поставщики</button>
+    <button onclick="api('/api/directory/audits', 'GET')">Аудит</button>
+  </fieldset>
+
+  <!-- 5. Операции -->
+  <fieldset>
+    <legend>5. Операции (/api/operations)</legend>
+    <button onclick="api('/api/operations/maintenance', 'GET')">Журнал ТО</button>
+    <button onclick="api('/api/operations/transfers', 'GET')">Перемещения</button>
+    <button onclick="api('/api/operations/orders', 'GET')">Заказы снабжения</button>
+  </fieldset>
+
+  <!-- 6. Пользователи (Admin) -->
+  <fieldset>
+    <legend>6. Пользователи (/user)</legend>
+    <button onclick="api('/user', 'GET')">Список пользователей</button>
+    <input id="targetUserId" placeholder="ID пользователя" style="width: 60px;">
+    <select id="targetRole">
+      <option value="employee">employee</option>
+      <option value="manager">manager</option>
+      <option value="admin">admin</option>
+    </select>
+    <button onclick="api('/user/' + val('targetUserId') + '/role', 'PATCH', { role: val('targetRole') })">Сменить роль</button>
+  </fieldset>
+
+  <!-- 7. Произвольный запрос -->
+  <fieldset>
+    <legend>7. Произвольный запрос</legend>
+    <select id="customMethod">
+      <option>GET</option>
+      <option>POST</option>
+      <option>PUT</option>
+      <option>PATCH</option>
+      <option>DELETE</option>
+    </select>
+    <input id="customPath" placeholder="/api/..." style="width: 250px;" value="/api/equipment">
+    <br><br>
+    <textarea id="customBody" rows="3" cols="60" placeholder='{"key": "value"}'></textarea>
+    <br>
+    <button onclick="runCustom()">Отправить</button>
+  </fieldset>
+
+  <hr>
+
+  <h3>Результат ответа:</h3>
+  <pre id="output" style="background: #f4f4f4; padding: 12px; border: 1px solid #ccc; max-height: 400px; overflow: auto;">Ожидание действий...</pre>
+
+  <script>
+    function val(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    async function api(path, method = 'GET', body = null) {
+      const out = document.getElementById('output');
+      const baseUrl = val('serverUrl');
+      out.textContent = `[${method}] ${path} — отправка запроса...`;
+
+      try {
+        const options = {
+          method,
+          credentials: 'include',
+          headers: {}
+        };
+
+        if (body) {
+          options.headers['Content-Type'] = 'application/json';
+          options.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(baseUrl + path, options);
+        let resData;
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (contentType.includes('application/json')) {
+          resData = await res.json();
+        } else {
+          resData = await res.text();
+        }
+
+        out.textContent = `HTTP ${res.status} ${res.statusText}\n\n` + 
+          (typeof resData === 'object' ? JSON.stringify(resData, null, 2) : resData);
+      } catch (err) {
+        out.textContent = `Ошибка запроса:\n${err.message}\n\n(Убедитесь, что сервер запущен, и проверьте консоль браузера F12 на наличие CORS ошибок).`;
+      }
+    }
+
+    function runCustom() {
+      const method = val('customMethod');
+      const path = val('customPath');
+      const rawBody = document.getElementById('customBody').value.trim();
+      let parsedBody = null;
+
+      if (rawBody && method !== 'GET') {
+        try {
+          parsedBody = JSON.parse(rawBody);
+        } catch (e) {
+          alert('Ошибка в синтаксисе JSON тела запроса');
+          return;
+        }
+      }
+      api(path, method, parsedBody);
+    }
+  </script>
+</body>
+</html>

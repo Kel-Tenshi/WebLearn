@@ -1,0 +1,29 @@
+# Зависимости обоих проектов
+node_modules/
+*/node_modules/
+
+# База данных SQLite (чтобы не затереть рабочую БД при деплое/пулле)
+*.sqlite
+*.sqlite3
+*.db
+Server/db/db.sqlite
+
+# Сборка фронтенда
+client/build/
+
+# Переменные окружения и секреты
+.env
+.env.*
+!.env.example
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Системные файлы и IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
