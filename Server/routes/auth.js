@@ -1,6 +1,6 @@
 const express = require('express');
 const authRouter = express.Router();
-const { verifyPassword, isLegacyPasswordHash } = require('../db/db');
+const { verifyPassword, isLegacyPasswordHash } = require('../utils/passwords');
 const { getUserByLogin, getUserById, updateUserPassword } = require('../db/users');
 const { saveRefreshToken, deleteByToken, getUserIdByToken } = require('../db/tokens');
 const {

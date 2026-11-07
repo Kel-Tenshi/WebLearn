@@ -1,4 +1,5 @@
-const { getDb, hashPassword } = require('./db');
+const { getDb } = require('./db');
+const { hashPassword } = require('../utils/passwords');
 
 const TABLE_NAME = 'users';
 

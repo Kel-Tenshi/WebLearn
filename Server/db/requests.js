@@ -5,25 +5,27 @@ const TABLE_NAME = 'requests';
 module.exports = {
   TABLE_NAME,
 
-  // Получить все заявки (новые сверху)
-  getAllRequests: async () => {
+  // Список заявок с данными оборудования.
+  // Если передан applicant — возвращаются только заявки этого сотрудника.
+  getRequestsWithEquipment: async (applicant = null) => {
     try {
-      return await getDb().all(`SELECT * FROM ${TABLE_NAME} ORDER BY id DESC`);
-    } catch (error) {
-      console.error('db/requests getAllRequests:', error);
-      throw error;
-    }
-  },
+      let query = `
+        SELECT r.*, e.name AS equipmentName, e.invNumber
+        FROM ${TABLE_NAME} r
+        LEFT JOIN equipment e ON r.equipmentId = e.id
+      `;
+      const params = [];
 
-  // Получить заявки одного заявителя (для сотрудников — они видят только свои)
-  getRequestsByApplicant: async (applicant) => {
-    try {
-      return await getDb().all(
-        `SELECT * FROM ${TABLE_NAME} WHERE applicant = ? ORDER BY id DESC`,
-        applicant
-      );
+      if (applicant) {
+        query += ' WHERE r.applicant = ?';
+        params.push(applicant);
+      }
+
+      query += ' ORDER BY r.id DESC';
+
+      return await getDb().all(query, ...params);
     } catch (error) {
-      console.error('db/requests getRequestsByApplicant:', error);
+      console.error('db/requests getRequestsWithEquipment:', error);
       throw error;
     }
   },
@@ -39,16 +41,18 @@ module.exports = {
   },
 
   // Создать заявку. Статус по умолчанию — «На согласовании», дата ставится самой базой
-  addRequest: async ({ type, title, applicant, priority }) => {
+  addRequest: async ({ type, title, applicant, equipmentId, priority }) => {
     try {
       const result = await getDb().run(
-        `INSERT INTO ${TABLE_NAME} (type, title, applicant, priority, status, createdAt)
-         VALUES (?, ?, ?, ?, 'На согласовании', datetime('now', 'localtime'))`,
+        `INSERT INTO ${TABLE_NAME} (type, title, applicant, equipmentId, priority, status, createdAt)
+         VALUES (?, ?, ?, ?, ?, 'На согласовании', datetime('now', 'localtime'))`,
         type,
         title,
         applicant,
+        equipmentId || null,
         priority
       );
+
       return await getDb().get(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`, result.lastID);
     } catch (error) {
       console.error('db/requests addRequest:', error);
@@ -56,8 +60,7 @@ module.exports = {
     }
   },
 
-  // Обновить статус заявки (Одобрено / Отклонено / На согласовании).
-  // Возвращает количество изменённых строк (0 — заявки нет)
+  // Обновить статус заявки. Возвращает количество изменённых строк (0 — заявки нет)
   updateRequestStatus: async (id, status) => {
     try {
       const result = await getDb().run(
