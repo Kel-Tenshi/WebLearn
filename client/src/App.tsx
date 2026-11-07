@@ -5,7 +5,7 @@ import { User } from './types';
 import { Navbar } from './components/layout/Navbar';
 import { LoginView } from './components/auth/LoginView';
 import { RegisterView } from './components/auth/RegisterView';
-import { EquipmentTab } from './components/EquipmentTab';
+import { EquipmentTab } from './components/equipment/EquipmentTab';
 import { RequestsTab } from './components/RequestsTab';
 import { OperationsTab } from './components/OperationsTab';
 import { DirectoryTab } from './components/DirectoryTab';
