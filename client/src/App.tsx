@@ -9,7 +9,7 @@ import { EquipmentTab } from './components/equipment/EquipmentTab';
 import { RequestsTab } from './components/requests/RequestsTab';
 import { OperationsTab } from './components/operations/OperationsTab';
 import { DirectoryTab } from './components/directory/DirectoryTab';
-import { UsersTab } from './components/UsersTab';
+import { UsersTab } from './components/users/UsersTab';
 import { NotFoundView } from './components/layout/NotFoundView';
 
 function ProtectedLayout({ user, onLogout }: { user: User | null; onLogout: () => void }) {
