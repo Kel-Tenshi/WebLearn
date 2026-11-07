@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import './App.css';
 import { userApi, authApi } from './api';
 import { User } from './types';
-import { Navbar } from './components/Navbar';
-import { LoginView } from './components/LoginView';
-import { RegisterView } from './components/RegisterView';
+import { Navbar } from './components/layout/Navbar';
+import { LoginView } from './components/auth/LoginView';
+import { RegisterView } from './components/auth/RegisterView';
 import { EquipmentTab } from './components/EquipmentTab';
 import { RequestsTab } from './components/RequestsTab';
 import { OperationsTab } from './components/OperationsTab';
 import { DirectoryTab } from './components/DirectoryTab';
 import { UsersTab } from './components/UsersTab';
-import { NotFoundView } from './components/NotFoundView';
+import { NotFoundView } from './components/layout/NotFoundView';
 
 function ProtectedLayout({ user, onLogout }: { user: User | null; onLogout: () => void }) {
   if (!user) {

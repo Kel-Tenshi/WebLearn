@@ -1,104 +1,14 @@
-import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ZxcvbnFactory } from '@zxcvbn-ts/core';
-import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common';
-import * as zxcvbnRuPackage from '@zxcvbn-ts/language-ru';
-import { authApi } from '../api';
-import { User } from '../types';
-import { FormField } from './FormField';
-import { PasswordInput } from './PasswordInput';
+import { authApi } from '../../api';
+import { User } from '../../types';
+import { usePasswordStrength } from '../../hooks/usePasswordStrength';
+import { FormField } from '../ui/FormField';
+import { PasswordInput } from '../ui/PasswordInput';
+import { SlideReveal } from '../ui/SlideReveal';
 
 interface Props {
   onSuccess: (user: User) => void;
-}
-
-// Плавно разворачивает блок по высоте при появлении
-const SlideReveal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const targetHeight = el.scrollHeight;
-
-    // Схлопываем до отрисовки, чтобы не было мигания
-    el.style.height = '0px';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-8px)';
-    el.style.overflow = 'hidden';
-
-    const raf = window.requestAnimationFrame(() => {
-      el.style.transition = 'height 0.3s ease, opacity 0.3s ease, transform 0.3s ease';
-      el.style.height = `${targetHeight}px`;
-      el.style.opacity = '1';
-      el.style.transform = 'translateY(0)';
-    });
-
-    // После раскрытия убираем ограничение, чтобы tooltip ошибки не обрезался
-    const timer = window.setTimeout(() => {
-      el.style.height = 'auto';
-      el.style.overflow = 'visible';
-    }, 340);
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      window.clearTimeout(timer);
-    };
-  }, []);
-
-  return (
-    <div ref={ref} style={{ overflow: 'hidden' }}>
-      {children}
-    </div>
-  );
-};
-
-interface PasswordStrength {
-  className: 'strength-weak' | 'strength-medium' | 'strength-strong';
-  label: string;
-  hint: string;
-  width: string;
-}
-
-// Готовый анализатор zxcvbn с русскими словарями и подсказками
-const zxcvbn = new ZxcvbnFactory({
-  dictionary: {
-    ...zxcvbnCommonPackage.dictionary,
-    ...zxcvbnRuPackage.dictionary
-  },
-  graphs: zxcvbnCommonPackage.adjacencyGraphs,
-  translations: zxcvbnRuPackage.translations
-});
-
-function getPasswordStrength(password: string): PasswordStrength | null {
-  if (!password) return null;
-
-  const result = zxcvbn.check(password);
-
-  // score: 0 — совсем плохой, 4 — очень надёжный
-  let className: PasswordStrength['className'];
-  let label: string;
-
-  if (result.score >= 3) {
-    className = 'strength-strong';
-    label = 'Надёжный пароль';
-  } else if (result.score === 2) {
-    className = 'strength-medium';
-    label = 'Средний пароль';
-  } else {
-    className = 'strength-weak';
-    label = 'Слабый пароль';
-  }
-
-  const hint = result.feedback.warning || result.feedback.suggestions[0] || '';
-
-  return {
-    className,
-    label,
-    hint,
-    width: `${(result.score + 1) * 20}%`
-  };
 }
 
 export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
@@ -110,7 +20,7 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
-  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+  const passwordStrength = usePasswordStrength(password);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};

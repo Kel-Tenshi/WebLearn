@@ -1,0 +1,126 @@
+.toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  width: min(400px, calc(100vw - 32px));
+}
+
+.toast-card {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 16px 16px;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+  animation: toast-in 0.24s ease-out;
+}
+
+.toast-card.closing {
+  animation: toast-out 0.2s ease-in forwards;
+  pointer-events: none;
+}
+
+.toast-card:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+/* Полоска сверху плашки: плавно уменьшается за время её показа */
+.toast-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.75);
+  transform-origin: left center;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.toast-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.toast-badge {
+  background: rgba(0, 0, 0, 0.28);
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.toast-title {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.toast-body {
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-error {
+  background: #dc2626;
+  border-left: 5px solid #7f1d1d;
+}
+
+.toast-warning {
+  background: #d97706;
+  border-left: 5px solid #78350f;
+}
+
+.toast-info {
+  background: #0284c7;
+  border-left: 5px solid #075985;
+}
+
+.toast-success {
+  background: #16a34a;
+  border-left: 5px solid #14532d;
+}

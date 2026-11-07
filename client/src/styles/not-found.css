@@ -1,0 +1,137 @@
+.not-found-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 16px;
+}
+
+.not-found-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 36px 32px;
+  max-width: 880px;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  text-align: center;
+}
+
+.not-found-code {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--primary);
+  margin-bottom: 6px;
+  letter-spacing: -2px;
+}
+
+.not-found-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+
+.not-found-desc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.not-found-desc code {
+  background: #fee2e2;
+  color: var(--danger);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.not-found-user-panel {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin: 0 auto 24px;
+  display: inline-block;
+  color: #475569;
+  font-size: 13px;
+}
+
+.not-found-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  text-align: left;
+  color: #334155;
+}
+
+.not-found-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.not-found-tile {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.not-found-tile:hover {
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.12);
+  transform: translateY(-2px);
+}
+
+.not-found-tile-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.not-found-tile-head h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.not-found-tag {
+  font-size: 11px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.not-found-tile p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.not-found-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.not-found-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}

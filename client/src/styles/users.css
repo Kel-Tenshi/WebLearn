@@ -1,0 +1,16 @@
+/* Опасная зона в панели администратора */
+.danger-zone {
+  margin-top: 20px;
+  border-color: #fecaca;
+}
+
+.danger-zone h3 {
+  margin-top: 0;
+  color: var(--danger);
+}
+
+.muted {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}

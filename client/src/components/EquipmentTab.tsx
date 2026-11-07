@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { equipmentApi, directoryApi } from '../api';
 import { Equipment, EquipmentStatus, Category, LocationItem, User } from '../types';
 import { useAlert } from '../context/AlertContext';
-import { FormField } from './FormField';
+import { FormField } from './ui/FormField';
 
 export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();

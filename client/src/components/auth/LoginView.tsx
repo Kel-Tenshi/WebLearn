@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../api';
-import { User } from '../types';
-import { FormField } from './FormField';
-import { PasswordInput } from './PasswordInput';
+import { authApi } from '../../api';
+import { User } from '../../types';
+import { FormField } from '../ui/FormField';
+import { PasswordInput } from '../ui/PasswordInput';
 
 interface Props {
   onSuccess: (user: User) => void;
