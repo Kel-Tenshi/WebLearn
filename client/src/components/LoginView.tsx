@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../utils/api';
 import { User } from '../utils/types';
 import { FormField } from './FormField';
+import { PasswordInput } from './PasswordInput';
 
 interface Props {
   onSuccess: (user: User) => void;
@@ -65,11 +66,11 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
             />
           </FormField>
           <FormField label="Пароль:" error={errors.password}>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
+              autoComplete="current-password"
+              onChange={(value) => {
+                setPassword(value);
                 if (errors.password) setErrors({ ...errors, password: '' });
               }}
             />

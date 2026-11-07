@@ -1,46 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ZxcvbnFactory } from '@zxcvbn-ts/core';
+import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common';
+import * as zxcvbnRuPackage from '@zxcvbn-ts/language-ru';
 import { authApi } from '../utils/api';
 import { User } from '../utils/types';
 import { FormField } from './FormField';
+import { PasswordInput } from './PasswordInput';
 
 interface Props {
   onSuccess: (user: User) => void;
 }
 
+// Плавно разворачивает блок по высоте при появлении
+const SlideReveal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const targetHeight = el.scrollHeight;
+
+    // Схлопываем до отрисовки, чтобы не было мигания
+    el.style.height = '0px';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-8px)';
+    el.style.overflow = 'hidden';
+
+    const raf = window.requestAnimationFrame(() => {
+      el.style.transition = 'height 0.3s ease, opacity 0.3s ease, transform 0.3s ease';
+      el.style.height = `${targetHeight}px`;
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
+
+    // После раскрытия убираем ограничение, чтобы tooltip ошибки не обрезался
+    const timer = window.setTimeout(() => {
+      el.style.height = 'auto';
+      el.style.overflow = 'visible';
+    }, 340);
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} style={{ overflow: 'hidden' }}>
+      {children}
+    </div>
+  );
+};
+
 interface PasswordStrength {
   className: 'strength-weak' | 'strength-medium' | 'strength-strong';
   label: string;
+  hint: string;
   width: string;
 }
 
-// Простая оценка надёжности: длина, регистр, цифры и спецсимволы
+// Готовый анализатор zxcvbn с русскими словарями и подсказками
+const zxcvbn = new ZxcvbnFactory({
+  dictionary: {
+    ...zxcvbnCommonPackage.dictionary,
+    ...zxcvbnRuPackage.dictionary
+  },
+  graphs: zxcvbnCommonPackage.adjacencyGraphs,
+  translations: zxcvbnRuPackage.translations
+});
+
 function getPasswordStrength(password: string): PasswordStrength | null {
   if (!password) return null;
 
-  const hasLower = /[a-zа-яё]/.test(password);
-  const hasUpper = /[A-ZА-ЯЁ]/.test(password);
-  const hasDigit = /\d/.test(password);
-  const hasSpecial = /[^A-Za-zА-Яа-яЁё0-9]/.test(password);
-  const classesCount = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+  const result = zxcvbn.check(password);
 
-  let score = 0;
-  if (password.length >= 6) score++;
-  if (password.length >= 10) score++;
-  if (hasLower && hasUpper) score++;
-  if (hasDigit) score++;
-  if (hasSpecial) score++;
+  // score: 0 — совсем плохой, 4 — очень надёжный
+  let className: PasswordStrength['className'];
+  let label: string;
 
-  // Пароль из одного класса символов (например, только цифры) — всегда слабый
-  if (classesCount <= 1) score = Math.min(score, 1);
-
-  if (score >= 4) {
-    return { className: 'strength-strong', label: 'Надёжный пароль', width: '100%' };
+  if (result.score >= 3) {
+    className = 'strength-strong';
+    label = 'Надёжный пароль';
+  } else if (result.score === 2) {
+    className = 'strength-medium';
+    label = 'Средний пароль';
+  } else {
+    className = 'strength-weak';
+    label = 'Слабый пароль';
   }
-  if (score >= 2) {
-    return { className: 'strength-medium', label: 'Средний пароль', width: '66%' };
-  }
-  return { className: 'strength-weak', label: 'Слабый пароль', width: '33%' };
+
+  const hint = result.feedback.warning || result.feedback.suggestions[0] || '';
+
+  return {
+    className,
+    label,
+    hint,
+    width: `${(result.score + 1) * 20}%`
+  };
 }
 
 export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
@@ -52,7 +110,7 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
-  const passwordStrength = getPasswordStrength(password);
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -119,12 +177,10 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
           </FormField>
 
           <FormField label="Пароль:" error={errors.password}>
-            <input
-              type="password"
-              autoComplete="new-password"
+            <PasswordInput
               value={password}
-              onChange={(e) => {
-                const value = e.target.value;
+              autoComplete="new-password"
+              onChange={(value) => {
                 setPassword(value);
 
                 const nextErrors: Record<string, string> = { ...errors, password: '' };
@@ -148,25 +204,27 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
                   />
                 </div>
                 <div className="password-strength-label">{passwordStrength.label}</div>
+                {passwordStrength.hint && (
+                  <div className="password-strength-hint">{passwordStrength.hint}</div>
+                )}
               </div>
             )}
           </FormField>
 
           {/* Поле подтверждения появляется только после ввода пароля */}
           {password.length > 0 && (
-            <div className="field-reveal">
+            <SlideReveal>
               <FormField label="Подтвердите пароль:" error={errors.confirmPassword}>
-                <input
-                  type="password"
-                  autoComplete="new-password"
+                <PasswordInput
                   value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
+                  autoComplete="new-password"
+                  onChange={(value) => {
+                    setConfirmPassword(value);
                     if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
                   }}
                 />
               </FormField>
-            </div>
+            </SlideReveal>
           )}
 
           <FormField label="ФИО (необязательно):" error={errors.fullName}>
