@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { equipmentApi, requestsApi } from '../api';
 import { Equipment, RequestItem } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useRequests() {
-  const { showApiError } = useAlert();
-
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [requestList, equipmentList] = await Promise.all([
         requestsApi.getAll(),
@@ -20,12 +19,12 @@ export function useRequests() {
 
       setRequests(requestList);
       setEquipment(equipmentList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -35,6 +34,7 @@ export function useRequests() {
     requests,
     equipment,
     loading,
+    error,
     reload,
     create: requestsApi.create,
     updateStatus: requestsApi.updateStatus,

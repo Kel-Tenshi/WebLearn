@@ -2,6 +2,7 @@ import React from 'react';
 import { User } from '../../types';
 import { useDashboard } from '../../hooks/useDashboard';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 import { AttentionList } from './AttentionList';
 import type { AttentionItem } from './AttentionList';
 import { RecentRequests } from './RecentRequests';
@@ -19,7 +20,7 @@ const ACTIVE_MAINTENANCE_STATUSES = ['Запланировано', 'Ожидае
 const ACTIVE_ORDER_STATUSES = ['Черновик', 'Согласован', 'В доставке'];
 
 export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
-  const { requests, equipment, maintenance, transfers, orders, loading } = useDashboard();
+  const { requests, equipment, maintenance, transfers, orders, loading, error, reload } = useDashboard();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
   const myRequests = requests.filter((request) => request.applicant === user.login);
@@ -149,6 +150,14 @@ export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
     return (
       <div className="tab-container">
         <Loading label="Загрузка сводки…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="tab-container">
+        <ErrorView error={error} onRetry={reload} />
       </div>
     );
   }

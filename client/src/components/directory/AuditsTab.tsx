@@ -4,10 +4,11 @@ import { useAudits } from '../../hooks/useAudits';
 import { useAlert } from '../../context/AlertContext';
 import { AuditsCard } from './AuditsCard';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 
 export const AuditsTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { audits, locations, loading, reload, create, updateStatus } = useAudits();
+  const { audits, locations, loading, error, reload, create, updateStatus } = useAudits();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
 
@@ -38,6 +39,15 @@ export const AuditsTab: React.FC<{ user: User }> = ({ user }) => {
       <div className="tab-container">
         <h2>Инвентаризация</h2>
         <Loading label="Загрузка актов инвентаризации…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="tab-container">
+        <h2>Инвентаризация</h2>
+        <ErrorView error={error} onRetry={reload} />
       </div>
     );
   }

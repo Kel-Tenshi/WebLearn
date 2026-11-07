@@ -4,10 +4,11 @@ import { useTransfers } from '../../hooks/useTransfers';
 import { useAlert } from '../../context/AlertContext';
 import { TransfersSection } from './TransfersSection';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 
 export const TransfersTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { transfers, equipment, locations, loading, reload, create, updateStatus } =
+  const { transfers, equipment, locations, loading, error, reload, create, updateStatus } =
     useTransfers();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
@@ -43,6 +44,7 @@ export const TransfersTab: React.FC<{ user: User }> = ({ user }) => {
   };
 
   if (loading) return <Loading label="Загрузка перемещений…" />;
+  if (error) return <ErrorView error={error} onRetry={reload} />;
 
   return (
     <TransfersSection

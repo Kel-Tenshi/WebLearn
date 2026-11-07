@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { equipmentApi, operationsApi } from '../api';
 import { Equipment, MaintenanceLog } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useMaintenance() {
-  const { showApiError } = useAlert();
-
   const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [maintenanceList, equipmentList] = await Promise.all([
         operationsApi.getMaintenance(),
@@ -20,12 +19,12 @@ export function useMaintenance() {
 
       setMaintenance(maintenanceList);
       setEquipment(equipmentList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -35,6 +34,7 @@ export function useMaintenance() {
     maintenance,
     equipment,
     loading,
+    error,
     reload,
     create: operationsApi.createMaintenance,
     updateStatus: operationsApi.updateMaintenanceStatus,

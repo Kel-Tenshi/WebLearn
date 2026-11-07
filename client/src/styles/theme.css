@@ -1,0 +1,183 @@
+/* Палитра и токены тем. Подключается первым: остальные стили используют переменные. */
+
+:root {
+  color-scheme: light;
+
+  /* Поверхности */
+  --bg: #f7f6fc;
+  --surface: #ffffff;
+  --surface-2: #f1effa;
+  --surface-3: #e7e3f4;
+  --overlay: rgba(24, 20, 48, 0.55);
+
+  /* Текст */
+  --ink: #211e33;
+  --ink-muted: #6b6685;
+  --ink-faint: #918ca8;
+  --on-primary: #ffffff;
+
+  /* Границы */
+  --line: #e2def0;
+  --line-strong: #cdc7e3;
+
+  /* Бренд: приглушённый сине-фиолетовый */
+  --primary: #5b54c9;
+  --primary-hover: #4a43b0;
+  --primary-active: #3f3997;
+  --primary-soft: #eeecfb;
+  --primary-soft-2: #e2ddf7;
+  --primary-border: #c9c4f0;
+  --accent: #7c5cd6;
+  --accent-magenta: #8f5b8f;
+
+  /* Семантика */
+  --success: #1d7a4f;
+  --success-soft: #e3f5ec;
+  --success-border: #b9e3cd;
+
+  --warning: #a35f0a;
+  --warning-soft: #fdf0d5;
+  --warning-border: #f0d5a2;
+
+  --danger: #b3394a;
+  --danger-hover: #992f3e;
+  --danger-solid: #b3394a;
+  --danger-solid-hover: #992f3e;
+  --danger-soft: #fbe9ec;
+  --danger-soft-2: #f7dbe0;
+  --danger-border: #efc1c9;
+
+  --info: #2f6f9e;
+  --info-soft: #e7f0f8;
+  --info-border: #c2d9ea;
+
+  /* Тени и фокус */
+  --shadow-sm: 0 1px 2px rgba(30, 24, 60, 0.06);
+  --shadow-md: 0 6px 18px rgba(30, 24, 60, 0.1);
+  --shadow-lg: 0 10px 25px -5px rgba(30, 24, 60, 0.22);
+  --ring: rgba(91, 84, 201, 0.3);
+
+  /* Топбар */
+  --topbar-bg: linear-gradient(120deg, #2e2a68 0%, #4a3d8f 58%, #5d4aa8 100%);
+  --topbar-ink: #f3f1ff;
+  --topbar-ink-muted: #c9c2ea;
+  --topbar-line: rgba(255, 255, 255, 0.2);
+  --topbar-hover: rgba(255, 255, 255, 0.12);
+  --topbar-active-bg: #ffffff;
+  --topbar-active-ink: #2e2a68;
+
+  /* Hero */
+  --hero-glow-1: rgba(124, 92, 214, 0.16);
+  --hero-glow-2: rgba(91, 84, 201, 0.1);
+  --hero-glow-3: rgba(143, 91, 143, 0.12);
+
+  /* Тост-плашки: насыщенные фоны с белым текстом */
+  --toast-success: #1d7a4f;
+  --toast-success-border: #14563a;
+  --toast-warning: #a35f0a;
+  --toast-warning-border: #744207;
+  --toast-info: #2f6f9e;
+  --toast-info-border: #215274;
+  --toast-error: #b3394a;
+  --toast-error-border: #7f2434;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0f0e17;
+  --surface: #1a1826;
+  --surface-2: #221f31;
+  --surface-3: #2b273d;
+  --overlay: rgba(5, 4, 12, 0.72);
+
+  --ink: #e7e5f0;
+  --ink-muted: #a8a3bd;
+  --ink-faint: #7f7a96;
+  --on-primary: #14121f;
+
+  --line: #2e2a42;
+  --line-strong: #403a5c;
+
+  --primary: #9089e8;
+  --primary-hover: #a79ff0;
+  --primary-active: #b9b2f5;
+  --primary-soft: rgba(144, 137, 232, 0.14);
+  --primary-soft-2: rgba(144, 137, 232, 0.22);
+  --primary-border: rgba(144, 137, 232, 0.38);
+  --accent: #a78bfa;
+  --accent-magenta: #c08bc0;
+
+  --success: #6fd39f;
+  --success-soft: rgba(111, 211, 159, 0.14);
+  --success-border: rgba(111, 211, 159, 0.32);
+
+  --warning: #e0b060;
+  --warning-soft: rgba(224, 176, 96, 0.14);
+  --warning-border: rgba(224, 176, 96, 0.32);
+
+  --danger: #e88a99;
+  --danger-hover: #f0a3af;
+  --danger-solid: #8f3547;
+  --danger-solid-hover: #7a2c3b;
+  --danger-soft: rgba(232, 138, 153, 0.14);
+  --danger-soft-2: rgba(232, 138, 153, 0.22);
+  --danger-border: rgba(232, 138, 153, 0.34);
+
+  --info: #7db3d9;
+  --info-soft: rgba(125, 179, 217, 0.14);
+  --info-border: rgba(125, 179, 217, 0.32);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.55);
+  --ring: rgba(144, 137, 232, 0.42);
+
+  --topbar-bg: linear-gradient(120deg, #1b1830 0%, #2a2350 58%, #382a63 100%);
+  --topbar-ink: #f0eefb;
+  --topbar-ink-muted: #b0aad0;
+  --topbar-line: rgba(255, 255, 255, 0.14);
+  --topbar-hover: rgba(255, 255, 255, 0.08);
+  --topbar-active-bg: #f0eefb;
+  --topbar-active-ink: #211d3a;
+
+  --hero-glow-1: rgba(144, 137, 232, 0.14);
+  --hero-glow-2: rgba(124, 92, 214, 0.1);
+  --hero-glow-3: rgba(192, 139, 192, 0.08);
+
+  --toast-success: #1f6b48;
+  --toast-success-border: #144a32;
+  --toast-warning: #7d4c11;
+  --toast-warning-border: #54330b;
+  --toast-info: #2a5f85;
+  --toast-info-border: #1c425e;
+  --toast-error: #8f3547;
+  --toast-error-border: #612433;
+}
+
+/* Фон html нужен до отрисовки body и для overscroll */
+html {
+  background-color: var(--bg);
+}
+
+/* Плавная смена темы */
+body,
+.card,
+.form-card,
+.topbar,
+.data-table,
+.data-table th,
+.badge,
+.status-badge,
+.status-action,
+.auth-box,
+.quick-link,
+.error-card,
+.modal-dialog {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  background: var(--primary-soft-2);
+  color: var(--ink);
+}

@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { userApi } from '../api';
 import { User } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useUsers() {
-  const { showApiError } = useAlert();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const list = await userApi.getUsers();
       setUsers(list);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -27,6 +27,7 @@ export function useUsers() {
   return {
     users,
     loading,
+    error,
     reload,
     updateRole: userApi.updateRole,
     deleteUser: userApi.deleteUser,

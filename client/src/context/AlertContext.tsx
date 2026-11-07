@@ -90,7 +90,9 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               {t.status ? <span className="toast-badge">{t.status}</span> : null}
               <span className="toast-title">
                 {t.type === 'error'
-                  ? 'Ошибка сервера'
+                  ? t.status === 0
+                    ? 'Нет связи'
+                    : 'Ошибка сервера'
                   : t.type === 'warning'
                   ? 'Предупреждение'
                   : t.type === 'success'

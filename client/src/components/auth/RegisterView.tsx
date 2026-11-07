@@ -6,6 +6,7 @@ import { usePasswordStrength } from '../../hooks/usePasswordStrength';
 import { FormField } from '../ui/FormField';
 import { PasswordInput } from '../ui/PasswordInput';
 import { SlideReveal } from '../ui/SlideReveal';
+import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 
 interface Props {
   onSuccess: (user: User) => void;
@@ -66,14 +67,17 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
       onSuccess(res.user);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(err?.message || 'Не удалось зарегистрироваться. Попробуйте ещё раз');
     }
   };
 
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <h2>Регистрация</h2>
+        <div className="auth-head">
+          <h2>Регистрация</h2>
+          <ThemeSwitcher variant="surface" />
+        </div>
         {error && <div className="error-banner">{error}</div>}
         <form onSubmit={handleSubmit} noValidate>
           <FormField label="Логин:" error={errors.login}>

@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { User, UserRole } from '../../types';
+import { ErrorView } from './ErrorView';
 
 interface Props {
   user: User;
@@ -9,115 +10,38 @@ interface Props {
 interface PageSuggestion {
   path: string;
   title: string;
-  description: string;
   roles: UserRole[];
-  badge: string;
 }
 
+const PAGES: PageSuggestion[] = [
+  { path: '/', title: 'Главная', roles: ['employee', 'manager', 'admin'] },
+  { path: '/equipment', title: 'Оборудование', roles: ['employee', 'manager', 'admin'] },
+  { path: '/requests', title: 'Заявки', roles: ['employee', 'manager', 'admin'] },
+  { path: '/operations/maintenance', title: 'Операции', roles: ['employee', 'manager', 'admin'] },
+  { path: '/directory', title: 'Справочники', roles: ['employee', 'manager', 'admin'] },
+  { path: '/audits', title: 'Инвентаризация', roles: ['employee', 'manager', 'admin'] },
+  { path: '/users', title: 'Пользователи', roles: ['admin'] },
+];
+
 export const NotFoundView: React.FC<Props> = ({ user }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-
-  // Список всех разделов системы с разграничением по ролям
-  const allPages: PageSuggestion[] = [
-    {
-      path: '/',
-      title: 'Главная',
-      description: 'Сводка по заявкам и задачам, требующим внимания',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Сводка'
-    },
-    {
-      path: '/equipment',
-      title: 'Оборудование',
-      description: 'Карточки единиц оборудования, инвентарные номера, поиск, статусы и учет',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Основной реестр'
-    },
-    {
-      path: '/requests',
-      title: 'Заявки',
-      description: 'Подача и согласование заявок на ремонт, перемещение и закупку оборудования',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Документооборот'
-    },
-    {
-      path: '/operations/maintenance',
-      title: 'Операции',
-      description: 'Журнал ТО, история перемещений и заказы поставщикам',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Управление'
-    },
-    {
-      path: '/directory',
-      title: 'Справочники',
-      description: 'Подразделения, локации, категории техники и поставщики',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Справочники'
-    },
-    {
-      path: '/audits',
-      title: 'Инвентаризация',
-      description: 'Акты ревизий по локациям и их статусы',
-      roles: ['employee', 'manager', 'admin'],
-      badge: 'Аудит'
-    },
-    {
-      path: '/users',
-      title: 'Управление пользователями',
-      description: 'Список учетных записей, распределение ролей сотрудников и администрирование',
-      roles: ['admin'],
-      badge: 'Администратор'
-    }
-  ];
-
-  // Доступные страницы строго под роль текущего пользователя
-  const availablePages = allPages.filter((page) => page.roles.includes(user.role));
+  const availablePages = PAGES.filter((page) => page.roles.includes(user.role));
 
   return (
-    <div className="tab-container not-found-wrapper">
-      <div className="not-found-card">
-        <div className="not-found-code">404</div>
-        <h1 className="not-found-title">Страница не найдена</h1>
-        <p className="not-found-desc">
-          Адрес <code>{location.pathname}</code> не существует или у вашей роли нет доступа к данному разделу.
-        </p>
-
-        <div className="not-found-user-panel">
-          Вы вошли как: <strong>{user.login}</strong> &bull; Роль в системе:{' '}
-          <span className="badge">{user.role}</span>
-        </div>
-
-        <h3 className="not-found-subtitle">Доступные вам разделы системы:</h3>
-
-        <div className="not-found-grid">
+    <div className="tab-container">
+      <ErrorView
+        status={404}
+        title="Страница не найдена"
+        message={`Адрес «${location.pathname}» не существует или недоступен для роли «${user.role}».`}
+      >
+        <div className="error-links">
           {availablePages.map((page) => (
-            <div
-              key={page.path}
-              className="not-found-tile"
-              onClick={() => navigate(page.path)}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="not-found-tile-head">
-                <h4>{page.title}</h4>
-                <span className="not-found-tag">{page.badge}</span>
-              </div>
-              <p>{page.description}</p>
-              <div className="not-found-link">Перейти в раздел &rarr;</div>
-            </div>
+            <Link key={page.path} to={page.path} className="error-link">
+              {page.title}
+            </Link>
           ))}
         </div>
-
-        <div className="not-found-actions">
-          <button className="primary" onClick={() => navigate('/')}>
-            На главную
-          </button>
-          <button onClick={() => navigate(-1)}>
-            Вернуться назад
-          </button>
-        </div>
-      </div>
+      </ErrorView>
     </div>
   );
 };

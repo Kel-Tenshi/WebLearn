@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { directoryApi, equipmentApi } from '../api';
 import { Category, Equipment, LocationItem } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useEquipment() {
-  const { showApiError } = useAlert();
-
   const [list, setList] = useState<Equipment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [equipment, categoriesList, locationsList] = await Promise.all([
         equipmentApi.getAll(),
@@ -23,12 +22,12 @@ export function useEquipment() {
       setList(equipment);
       setCategories(categoriesList);
       setLocations(locationsList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -39,6 +38,7 @@ export function useEquipment() {
     categories,
     locations,
     loading,
+    error,
     reload,
     create: equipmentApi.create,
     update: equipmentApi.update,

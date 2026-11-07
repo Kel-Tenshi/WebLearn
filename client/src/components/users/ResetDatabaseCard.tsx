@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
+import { useConfirm } from '../../context/ConfirmContext';
 
 interface Props {
   onReset: () => Promise<void>;
 }
 
 export const ResetDatabaseCard: React.FC<Props> = ({ onReset }) => {
+  const { confirm } = useConfirm();
   const [resetting, setResetting] = useState(false);
 
   const handleReset = async () => {
-    const confirmed = window.confirm(
-      'Сбросить базу данных?\n\n' +
-      'Все оборудование, заявки, операции, справочники и пользователи будут удалены, ' +
-      'после чего база заново заполнится демонстрационными данными.\n\n' +
-      'Текущая сессия завершится — потребуется войти заново.'
-    );
+    const confirmed = await confirm({
+      title: 'Сбросить базу данных?',
+      message:
+        'Все оборудование, заявки, операции, справочники и пользователи будут удалены, ' +
+        'после чего база заново заполнится демонстрационными данными.\n\n' +
+        'Текущая сессия завершится — потребуется войти заново.',
+      confirmLabel: 'Сбросить',
+      tone: 'danger',
+    });
     if (!confirmed) return;
 
     setResetting(true);

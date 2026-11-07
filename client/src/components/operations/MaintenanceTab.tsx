@@ -4,10 +4,11 @@ import { useMaintenance } from '../../hooks/useMaintenance';
 import { useAlert } from '../../context/AlertContext';
 import { MaintenanceSection } from './MaintenanceSection';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 
 export const MaintenanceTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { maintenance, equipment, loading, reload, create, updateStatus } = useMaintenance();
+  const { maintenance, equipment, loading, error, reload, create, updateStatus } = useMaintenance();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
 
@@ -33,6 +34,7 @@ export const MaintenanceTab: React.FC<{ user: User }> = ({ user }) => {
   };
 
   if (loading) return <Loading label="Загрузка журнала ТО…" />;
+  if (error) return <ErrorView error={error} onRetry={reload} />;
 
   return (
     <MaintenanceSection

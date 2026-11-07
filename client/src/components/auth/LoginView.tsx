@@ -4,6 +4,7 @@ import { authApi } from '../../api';
 import { User } from '../../types';
 import { FormField } from '../ui/FormField';
 import { PasswordInput } from '../ui/PasswordInput';
+import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 
 interface Props {
   onSuccess: (user: User) => void;
@@ -46,14 +47,17 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
       onSuccess(res.user);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(err?.message || 'Не удалось выполнить вход. Попробуйте ещё раз');
     }
   };
 
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <h2>Авторизация</h2>
+        <div className="auth-head">
+          <h2>Авторизация</h2>
+          <ThemeSwitcher variant="surface" />
+        </div>
         {error && <div className="error-banner">{error}</div>}
         <form onSubmit={handleSubmit} noValidate>
           <FormField label="Логин:" error={errors.login}>

@@ -92,12 +92,15 @@ client/src/
     usePasswordStrength.ts
   context/
     AlertContext.tsx   тосты (ошибки/успех), provider + useAlert
+    ConfirmContext.tsx кастомные подтверждения, provider + useConfirm
+    ThemeContext.tsx   тема light/dark/system, data-theme, localStorage
   utils/
     validation.ts      requiredText, min/maxTextLength, nonNegativeNumber, collect
     passwordStrength.ts обёртка над @zxcvbn-ts с русскими словарями
+    apiErrors.ts       статус → заголовок/текст/тон для страниц ошибок
   components/
-    ui/                FormField, PasswordInput, SlideReveal, Loading, StatusBadge, StatusActions
-    layout/            Navbar, NotFoundView
+    ui/                FormField, PasswordInput, SlideReveal, Loading, StatusBadge, StatusActions, ThemeSwitcher, ConfirmDialog
+    layout/            Navbar, NotFoundView, ErrorView, ErrorBoundary
     auth/              LoginView, RegisterView
     home/              HomeTab, AttentionList, RecentRequests, QuickLinks
     equipment/         EquipmentTab, EquipmentForm, EquipmentTable
@@ -106,17 +109,26 @@ client/src/
     directory/         DirectoryTab, DepartmentsCard, LocationsCard, CategoriesCard, SuppliersCard, AuditsTab, AuditsCard
     users/             UsersTab, UsersTable, ResetDatabaseCard
   styles/
-    base.css           переменные, body, топбар, таблицы, кнопки, карточки
+    theme.css          токены палитры: light + [data-theme="dark"]
+    base.css           body, топбар, таблицы, кнопки, карточки
     auth.css           экраны входа/регистрации
     forms.css          поля, tooltip-ошибки, пароль, индикатор надёжности, растягиваемые поля
     toasts.css         всплывающие плашки
-    not-found.css      страница 404
+    error.css          страницы ошибок 400/401/403/404/409/500 и сетевых сбоев
     users.css          опасная зона сброса БД
     ui.css             загрузка, статус-бейджи и кнопки переходов
     home.css           главная страница
 ```
 
 Правило: страница (`*Tab`) держит состояние и обработчики, форма и таблица — отдельные компоненты, загрузка/CRUD — в хуке, запросы — в `api/`, типы — в `types/`.
+
+## Темы и оформление
+
+- Палитра — приглушённый сине-фиолетовый. Все цвета вынесены в `styles/theme.css`: `:root` — светлая тема, `[data-theme="dark"]` — тёмная. В остальных CSS используются только переменные (`--bg`, `--surface`, `--ink`, `--primary`, `--success` и т.д.), hex-коды не хардкодятся.
+- Режимы: `light`, `dark`, `system`. Выбор хранится в `localStorage` (`theme`), применяется как `data-theme` на `<html>`; в режиме `system` реагирует на смену темы ОС.
+- Переключатель — `components/ui/ThemeSwitcher.tsx` в топбаре и на экранах входа/регистрации (вариант `surface`), иконки из `lucide-react`.
+- `public/index.html` выставляет тему inline-скриптом до отрисовки, чтобы не было белой вспышки.
+- Семантические цвета не подменяются фирменным: success — зелёный, warning — янтарный, danger — красный, info — голубой.
 
 ## Состояния и переходы
 
@@ -145,7 +157,7 @@ client/src/
 
 ```
 Server/
-  server.js            Express-приложение, CORS, cookie, роутеры, 404/500
+  server.js            Express-приложение, CORS, cookie, роутеры, обработка 404/400/413/500
   constants.js         роли, статусы, перечисления, настройки JWT
   stateMachine.js      карта переходов статусов и проверка canTransition
   config/
@@ -209,6 +221,13 @@ Server/
   - `manager` / `admin` — CRUD оборудования, справочников, операций, смена статусов;
   - `admin` — дополнительно пользователи и сброс БД.
 
+## Ошибки
+
+- Клиент: ошибки загрузки данных → `ErrorView` (код, заголовок, текст, «Повторить»); ошибки действий (400/403/409/500) → тосты; падение React → `ErrorBoundary` со страницей 500.
+- Неизвестный маршрут → `NotFoundView` (404), `/users` без роли admin → `ErrorView` 403.
+- 401: `api/http.ts` пробует refresh; при неудаче шлёт событие `auth:expired`, App сбрасывает пользователя и уводит на `/login`.
+- Сервер: битый JSON → 400, слишком большое тело → 413, неизвестный маршрут → 404, прочие исключения → 500 без утечки внутренних деталей.
+
 ## Данные
 
 12 таблиц: `departments`, `locations`, `categories`, `users`, `tokens`, `suppliers`, `equipment`, `requests`, `maintenance_logs`, `transfers`, `orders`, `inventory_audits`.
@@ -223,6 +242,11 @@ Server/
 - Новая форма: `useForm` + `collect`/валидаторы из `utils/validation.ts`, поля оборачивать в `FormField`. Если поле должно занимать всё свободное место в строке — `FormField className="field-grow"`.
 - Новый серверный домен: `db/<domain>.js`, `routes/<domain>.js` (или папка с `index.js`), подключить в `server.js`.
 - Новые стили: отдельный файл в `styles/` и импорт в `src/index.tsx` (порядок импортов важен для каскада).
+- Новый цвет: токен в `styles/theme.css` для обеих тем, в компонентах — только `var(--...)`, без hex.
+- Новый статус ошибки: добавить запись в `STATUS_INFO` (`utils/apiErrors.ts`) и при необходимости иконку в `ErrorView`.
+- Ошибка загрузки данных: hook хранит `error` и отдаёт `reload`; страница при `error` рендерит `<ErrorView error={error} onRetry={reload} />`, а действия (400/403/409/500) показываются тостом через `showApiError`.
+- Новое подтверждение действия: `const { confirm } = useConfirm()` и `await confirm({ title, message, confirmLabel, tone: 'danger' })`; `window.confirm` не использовать.
+- Новая иконка: компонент из `lucide-react` (не эмодзи и не самодельный SVG без необходимости).
 
 ## Известные особенности
 

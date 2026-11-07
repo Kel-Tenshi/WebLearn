@@ -1,13 +1,3 @@
-:root {
-  --ink: #1e293b;
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --line: #e2e8f0;
-  --primary: #0f766e;
-  --primary-hover: #115e59;
-  --danger: #b91c1c;
-}
-
 body {
   margin: 0;
   background-color: var(--bg);
@@ -23,15 +13,16 @@ body {
   gap: 16px;
   flex-wrap: wrap;
   padding: 10px 24px;
-  background: #0f172a;
-  color: #fff;
+  background: var(--topbar-bg);
+  color: var(--topbar-ink);
+  box-shadow: var(--shadow-sm);
 }
 
 .brand {
   padding: 8px 0;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--topbar-ink);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -50,17 +41,23 @@ body {
 
 .tabs button {
   background: transparent;
-  color: #94a3b8;
+  color: var(--topbar-ink-muted);
   border: none;
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tabs button:hover {
+  background: var(--topbar-hover);
+  color: var(--topbar-ink);
 }
 
 .tabs button.active {
-  background: #fff;
-  color: #0f172a;
+  background: var(--topbar-active-bg);
+  color: var(--topbar-active-ink);
   font-weight: 600;
 }
 
@@ -68,18 +65,77 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #cbd5e1;
+  color: var(--topbar-ink-muted);
   font-size: 13px;
 }
 
 .profile button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
-  color: #e2e8f0;
-  border-color: #334155;
+  color: var(--topbar-ink);
+  border-color: var(--topbar-line);
 }
 
 .profile button:hover {
-  background: #1e293b;
+  background: var(--topbar-hover);
+}
+
+/* Переключатель темы: светлая / тёмная / системная */
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--topbar-line);
+  border-radius: 8px;
+  background: var(--topbar-hover);
+}
+
+.theme-switcher button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--topbar-ink-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-switcher button:hover {
+  background: var(--topbar-hover);
+  color: var(--topbar-ink);
+}
+
+.theme-switcher button.active {
+  background: var(--topbar-active-bg);
+  color: var(--topbar-active-ink);
+}
+
+/* Вариант для светлых поверхностей: экран входа и регистрации */
+.theme-switcher--surface {
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+
+.theme-switcher--surface button {
+  color: var(--ink-muted);
+}
+
+.theme-switcher--surface button:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+.theme-switcher--surface button.active {
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 .sub-nav {
@@ -92,14 +148,15 @@ body {
 .sub-nav button {
   padding: 6px 12px;
   border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 6px;
   cursor: pointer;
 }
 
 .sub-nav button.active {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -111,9 +168,9 @@ body {
 
 .form-card,
 .card {
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 16px;
   margin-bottom: 20px;
 }
@@ -130,33 +187,83 @@ body {
   flex: 0 0 auto;
 }
 
+/* Select не должен растягиваться под длинный пункт и вылезать из карточки */
+.form-row input,
+.form-row select,
+.form-row textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
 input,
 select,
+textarea,
 button {
   font: inherit;
   padding: 7px 10px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  box-sizing: border-box;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* Автозаполнение браузера не должно заливать поля белым в тёмной теме */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+  transition: background-color 9999s ease-out 0s;
 }
 
 button {
   cursor: pointer;
-  background: #fff;
 }
 
 button.primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
 button.primary:hover {
   background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 button.danger {
   color: var(--danger);
-  border-color: #fecaca;
+  border-color: var(--danger-border);
+  background: var(--surface);
+}
+
+button.danger:hover {
+  background: var(--danger-soft);
+}
+
+button.danger-solid {
+  background: var(--danger-solid);
+  color: #ffffff;
+  border-color: var(--danger-solid);
+}
+
+button.danger-solid:hover {
+  background: var(--danger-solid-hover);
+  border-color: var(--danger-solid-hover);
 }
 
 .search-input {
@@ -169,7 +276,7 @@ button.danger {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
@@ -183,10 +290,10 @@ button.danger {
 }
 
 .data-table th {
-  background: #f1f5f9;
+  background: var(--surface-2);
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 .badge {
@@ -194,7 +301,8 @@ button.danger {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
-  background: #e2e8f0;
+  background: var(--surface-3);
+  color: var(--ink-muted);
 }
 
 .grid-3 {
@@ -210,7 +318,7 @@ button.danger {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -219,13 +327,13 @@ button.danger {
 }
 
 .modal-dialog {
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 24px;
   width: 360px;
   max-width: calc(100vw - 32px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
   text-align: center;
 }
 
@@ -238,7 +346,7 @@ button.danger {
 
 .modal-dialog p {
   margin-bottom: 20px;
-  color: var(--ink);
+  color: var(--ink-muted);
   font-size: 14px;
   line-height: 1.4;
   word-break: break-word;
@@ -246,4 +354,53 @@ button.danger {
 
 .modal-dialog button {
   min-width: 90px;
+}
+
+/* Диалог подтверждения */
+.confirm-dialog {
+  width: 430px;
+  text-align: left;
+}
+
+.confirm-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.confirm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.confirm-dialog .confirm-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.confirm-dialog .confirm-message {
+  margin: 0 0 20px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-actions button {
+  min-width: 96px;
 }

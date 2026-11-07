@@ -5,10 +5,11 @@ import { useAlert } from '../../context/AlertContext';
 import { RequestForm } from './RequestForm';
 import { RequestsTable } from './RequestsTable';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 
 export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { requests, equipment, loading, reload, create, updateStatus } = useRequests();
+  const { requests, equipment, loading, error, reload, create, updateStatus } = useRequests();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
 
@@ -38,6 +39,15 @@ export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
       <div className="tab-container">
         <h2>Заявки</h2>
         <Loading label="Загрузка заявок…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="tab-container">
+        <h2>Заявки</h2>
+        <ErrorView error={error} onRetry={reload} />
       </div>
     );
   }

@@ -7,20 +7,19 @@ import {
   RequestItem,
   Transfer,
 } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useDashboard() {
-  const { showApiError } = useAlert();
-
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [requestList, equipmentList, maintenanceList, transferList, orderList] =
         await Promise.all([
@@ -36,12 +35,12 @@ export function useDashboard() {
       setMaintenance(maintenanceList);
       setTransfers(transferList);
       setOrders(orderList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -54,6 +53,7 @@ export function useDashboard() {
     transfers,
     orders,
     loading,
+    error,
     reload,
   };
 }

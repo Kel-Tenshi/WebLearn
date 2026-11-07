@@ -7,6 +7,7 @@ import { LocationsCard } from './LocationsCard';
 import { CategoriesCard } from './CategoriesCard';
 import { SuppliersCard } from './SuppliersCard';
 import { Loading } from '../ui/Loading';
+import { ErrorView } from '../layout/ErrorView';
 
 export const DirectoryTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
@@ -16,6 +17,7 @@ export const DirectoryTab: React.FC<{ user: User }> = ({ user }) => {
     categories,
     suppliers,
     loading,
+    error,
     reload,
     createDepartment,
     createLocation,
@@ -41,6 +43,15 @@ export const DirectoryTab: React.FC<{ user: User }> = ({ user }) => {
       <div className="tab-container">
         <h2>Справочники</h2>
         <Loading label="Загрузка справочников…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="tab-container">
+        <h2>Справочники</h2>
+        <ErrorView error={error} onRetry={reload} />
       </div>
     );
   }

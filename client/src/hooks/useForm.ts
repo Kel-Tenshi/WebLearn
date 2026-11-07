@@ -41,6 +41,8 @@ export function useForm<T extends object>(
       setSubmitting(true);
       try {
         await handler(values);
+      } catch {
+        // Ошибку уже обработал и показал вызывающий код
       } finally {
         setSubmitting(false);
       }

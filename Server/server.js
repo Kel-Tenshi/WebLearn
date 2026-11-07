@@ -13,7 +13,7 @@ const opsRouter = require('./routes/operations');
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(cookies());
 app.use(
   cors({
@@ -37,13 +37,27 @@ app.use((req, res) => {
   });
 });
 
-// Глобальный перехватчик внутренних ошибок (500)
+// Глобальный перехватчик ошибок: 400 для битого JSON, 413 для больших тел, 500 для остального
 app.use((err, req, res, next) => {
   console.error('SERVER EXCEPTION:', err);
-  const status = err.status || 500;
-  res.status(status).json({
-    message: err.message || 'Внутренняя непредвиденная ошибка сервера'
-  });
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Некорректный JSON в теле запроса' });
+  }
+
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ message: 'Слишком большой размер запроса' });
+  }
+
+  const status = Number(err.status) || 500;
+  const message =
+    status >= 500 ? 'Внутренняя ошибка сервера' : err.message || 'Ошибка запроса';
+
+  res.status(status).json({ message });
 });
 
 const port = process.env.PORT || 5000;

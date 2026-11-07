@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { directoryApi, operationsApi } from '../api';
 import { PurchaseOrder, Supplier } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useOrders() {
-  const { showApiError } = useAlert();
-
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [orderList, supplierList] = await Promise.all([
         operationsApi.getOrders(),
@@ -20,12 +19,12 @@ export function useOrders() {
 
       setOrders(orderList);
       setSuppliers(supplierList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -35,6 +34,7 @@ export function useOrders() {
     orders,
     suppliers,
     loading,
+    error,
     reload,
     create: operationsApi.createOrder,
     updateStatus: operationsApi.updateOrderStatus,

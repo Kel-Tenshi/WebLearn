@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { User } from '../../types';
+import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 
 interface Props {
   user: User;
@@ -51,8 +53,12 @@ export const Navbar: React.FC<Props> = ({ user, onLogout }) => {
         ))}
       </nav>
       <div className="profile">
+        <ThemeSwitcher />
         <span>{user.login} (<strong>{ROLE_LABELS[user.role]}</strong>)</span>
-        <button onClick={onLogout}>Выйти</button>
+        <button onClick={onLogout}>
+          <LogOut size={14} aria-hidden="true" />
+          Выйти
+        </button>
       </div>
     </header>
   );

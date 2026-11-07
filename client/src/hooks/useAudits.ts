@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { directoryApi } from '../api';
 import { InventoryAudit, LocationItem } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useAudits() {
-  const { showApiError } = useAlert();
-
   const [audits, setAudits] = useState<InventoryAudit[]>([]);
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [auditList, locationList] = await Promise.all([
         directoryApi.getAudits(),
@@ -20,12 +19,12 @@ export function useAudits() {
 
       setAudits(auditList);
       setLocations(locationList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -35,6 +34,7 @@ export function useAudits() {
     audits,
     locations,
     loading,
+    error,
     reload,
     create: directoryApi.createAudit,
     updateStatus: directoryApi.updateAuditStatus,

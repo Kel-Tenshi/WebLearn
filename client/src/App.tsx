@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { userApi, authApi } from './api';
+import { userApi, authApi, ApiError } from './api';
 import { User } from './types';
 import { Navbar } from './components/layout/Navbar';
 import { LoginView } from './components/auth/LoginView';
@@ -13,6 +13,8 @@ import { DirectoryTab } from './components/directory/DirectoryTab';
 import { AuditsTab } from './components/directory/AuditsTab';
 import { UsersTab } from './components/users/UsersTab';
 import { NotFoundView } from './components/layout/NotFoundView';
+import { ErrorView } from './components/layout/ErrorView';
+import { Loading } from './components/ui/Loading';
 
 function ProtectedLayout({ user, onLogout }: { user: User | null; onLogout: () => void }) {
   if (!user) {
@@ -32,12 +34,35 @@ function ProtectedLayout({ user, onLogout }: { user: User | null; onLogout: () =
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [sessionError, setSessionError] = useState<unknown>(null);
+
+  const loadSession = useCallback(() => {
+    setLoading(true);
+    setSessionError(null);
+
+    userApi
+      .getMe()
+      .then((data) => setUser(data))
+      .catch((error) => {
+        // 401 — это нормальная ситуация «не авторизован», остальное показываем страницей
+        if (error instanceof ApiError && error.status === 401) {
+          setUser(null);
+          return;
+        }
+        setSessionError(error);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
-    userApi.getMe()
-      .then((data) => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    loadSession();
+  }, [loadSession]);
+
+  // Глобальная реакция на истёкшую сессию после неудачного refresh
+  useEffect(() => {
+    const handleExpired = () => setUser(null);
+    window.addEventListener('auth:expired', handleExpired);
+    return () => window.removeEventListener('auth:expired', handleExpired);
   }, []);
 
   const handleLogout = async () => {
@@ -51,7 +76,15 @@ function App() {
   };
 
   if (loading) {
-    return <div style={{ padding: 32, textAlign: 'center' }}>Загрузка сессии...</div>;
+    return (
+      <div className="tab-container">
+        <Loading label="Загрузка сессии…" />
+      </div>
+    );
+  }
+
+  if (sessionError) {
+    return <ErrorView error={sessionError} onRetry={loadSession} />;
   }
 
   return (
@@ -76,9 +109,19 @@ function App() {
           <Route path="operations/:section" element={<OperationsTab user={user} />} />
           <Route path="directory" element={<DirectoryTab user={user} />} />
           <Route path="audits" element={<AuditsTab user={user} />} />
-          {user.role === 'admin' && (
-            <Route path="users" element={<UsersTab currentUser={user} />} />
-          )}
+          <Route
+            path="users"
+            element={
+              user.role === 'admin' ? (
+                <UsersTab currentUser={user} />
+              ) : (
+                <ErrorView
+                  status={403}
+                  message="Раздел «Пользователи» доступен только администратору."
+                />
+              )
+            }
+          />
           {/* Кастомная страница 404 для авторизованного пользователя с учетом его роли */}
           <Route path="*" element={<NotFoundView user={user} />} />
         </Route>

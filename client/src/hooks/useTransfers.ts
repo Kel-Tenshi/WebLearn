@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { directoryApi, equipmentApi, operationsApi } from '../api';
 import { Equipment, LocationItem, Transfer } from '../types';
-import { useAlert } from '../context/AlertContext';
 
 export function useTransfers() {
-  const { showApiError } = useAlert();
-
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [transferList, equipmentList, locationList] = await Promise.all([
         operationsApi.getTransfers(),
@@ -23,12 +22,12 @@ export function useTransfers() {
       setTransfers(transferList);
       setEquipment(equipmentList);
       setLocations(locationList);
-    } catch (error) {
-      showApiError(error);
+    } catch (loadError) {
+      setError(loadError);
     } finally {
       setLoading(false);
     }
-  }, [showApiError]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -39,6 +38,7 @@ export function useTransfers() {
     equipment,
     locations,
     loading,
+    error,
     reload,
     create: operationsApi.createTransfer,
     updateStatus: operationsApi.updateTransferStatus,

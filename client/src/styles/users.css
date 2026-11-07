@@ -1,7 +1,7 @@
 /* Опасная зона в панели администратора */
 .danger-zone {
   margin-top: 20px;
-  border-color: #fecaca;
+  border-color: var(--danger-border);
 }
 
 .danger-zone h3 {
@@ -10,7 +10,7 @@
 }
 
 .muted {
-  color: #64748b;
+  color: var(--ink-muted);
   font-size: 13px;
   line-height: 1.4;
 }

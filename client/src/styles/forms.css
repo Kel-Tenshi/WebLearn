@@ -43,13 +43,13 @@
   border: none;
   border-radius: 4px;
   background: transparent;
-  color: #64748b;
+  color: var(--ink-muted);
   cursor: pointer;
 }
 
 .password-toggle:hover,
 .password-toggle:focus-visible {
-  background: #f1f5f9;
+  background: var(--surface-2);
   color: var(--ink);
   outline: none;
 }
@@ -63,7 +63,7 @@
 .password-strength-track {
   width: 100%;
   height: 5px;
-  background: #e2e8f0;
+  background: var(--surface-3);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -75,28 +75,28 @@
 }
 
 .password-strength-fill.strength-weak {
-  background: #dc2626;
+  background: var(--danger);
 }
 
 .password-strength-fill.strength-medium {
-  background: #f59e0b;
+  background: var(--warning);
 }
 
 .password-strength-fill.strength-strong {
-  background: #16a34a;
+  background: var(--success);
 }
 
 .password-strength-label {
   margin-top: 4px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 .password-strength-hint {
   margin-top: 2px;
   font-size: 11px;
   line-height: 1.3;
-  color: #94a3b8;
+  color: var(--ink-faint);
 }
 
 /* Валидационные тултипы полей */
@@ -109,7 +109,7 @@
 .field-label {
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--ink-muted);
   margin-bottom: 2px;
 }
 
@@ -120,8 +120,8 @@
 
 .field-wrapper.has-error input,
 .field-wrapper.has-error select {
-  border-color: #ef4444 !important;
-  background-color: #fef2f2 !important;
+  border-color: var(--danger) !important;
+  background-color: var(--danger-soft) !important;
 }
 
 .field-tooltip {
@@ -133,7 +133,7 @@
   gap: 6px;
   width: max-content;
   max-width: 260px;
-  background: #b91c1c;
+  background: var(--danger-solid);
   color: #ffffff;
   padding: 6px 9px;
   border-radius: 5px;
@@ -172,7 +172,7 @@
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid #b91c1c;
+  border-top: 5px solid var(--danger-solid);
 }
 
 @keyframes tooltipFade {

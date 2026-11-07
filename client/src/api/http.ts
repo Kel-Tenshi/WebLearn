@@ -10,6 +10,39 @@ export class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 15000;
+
+function fallbackMessage(status: number): string {
+  switch (status) {
+    case 400:
+      return 'Некорректный запрос (400)';
+    case 401:
+      return 'Сессия истекла или требуется авторизация (401)';
+    case 403:
+      return 'Недостаточно прав для выполнения действия (403)';
+    case 404:
+      return 'Запрашиваемый ресурс не найден (404)';
+    case 409:
+      return 'Запись с такими данными уже существует (409)';
+    case 413:
+      return 'Слишком большой размер запроса (413)';
+    case 422:
+      return 'Ошибка валидации данных (422)';
+    case 429:
+      return 'Слишком много запросов, попробуйте позже (429)';
+    case 500:
+      return 'Внутренняя ошибка сервера (500)';
+    case 502:
+      return 'Сервер временно недоступен (502)';
+    case 503:
+      return 'Сервис недоступен (503)';
+    case 504:
+      return 'Сервер не отвечает (504)';
+    default:
+      return `Ошибка запроса (${status})`;
+  }
+}
+
 export async function request<T>(
   url: string,
   options: RequestInit = {},
@@ -24,11 +57,19 @@ export async function request<T>(
     },
   };
 
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   let response: Response;
   try {
-    response = await fetch(url, config);
-  } catch (networkErr: any) {
+    response = await fetch(url, { ...config, signal: options.signal || controller.signal });
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new ApiError(0, 'Сервер не отвечает. Превышено время ожидания');
+    }
     throw new ApiError(0, 'Сервер недоступен. Проверьте соединение с сетью');
+  } finally {
+    window.clearTimeout(timeout);
   }
 
   // Автоматический refresh токена при 401
@@ -39,25 +80,21 @@ export async function request<T>(
         return await request<T>(url, options, true);
       }
     } catch {
-      // Игнорируем ошибку обновления
+      // Ошибку обновления обработаем как истёкшую сессию
     }
+
+    // Сообщаем приложению, что сессия больше недействительна
+    window.dispatchEvent(new Event('auth:expired'));
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    let message = data && data.message ? data.message : '';
-    if (!message) {
-      switch (response.status) {
-        case 400: message = 'Некорректный запрос (400)'; break;
-        case 401: message = 'Сессия истекла или требуется авторизация (401)'; break;
-        case 403: message = 'Недостаточно прав для выполнения действия (403)'; break;
-        case 404: message = 'Запрашиваемый ресурс не найден (404)'; break;
-        case 409: message = 'Запись с такими данными уже существует (409)'; break;
-        case 500: message = 'Внутренняя ошибка сервера (500)'; break;
-        default: message = `Ошибка запроса (${response.status})`;
-      }
-    }
+    const message = (data && data.message) || fallbackMessage(response.status);
     throw new ApiError(response.status, message, data);
   }
 
