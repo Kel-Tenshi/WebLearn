@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { userApi } from '../utils/api';
-import { User, UserRole } from '../utils/types';
+import { userApi } from '../api';
+import { User, UserRole } from '../types';
 import { useAlert } from '../context/AlertContext';
 
 export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User } from '../utils/types';
+import { User } from '../types';
 
 interface Props {
   user: User;

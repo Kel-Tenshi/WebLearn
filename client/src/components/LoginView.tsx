@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../utils/api';
-import { User } from '../utils/types';
+import { authApi } from '../api';
+import { User } from '../types';
 import { FormField } from './FormField';
 import { PasswordInput } from './PasswordInput';
 

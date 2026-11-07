@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { requestsApi, equipmentApi } from '../utils/api';
-import { RequestItem, RequestType, RequestPriority, RequestStatus, Equipment, User } from '../utils/types';
+import { requestsApi, equipmentApi } from '../api';
+import { RequestItem, RequestType, RequestPriority, RequestStatus, Equipment, User } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { FormField } from './FormField';
 

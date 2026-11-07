@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import './App.css';
-import { userApi, authApi } from './utils/api';
-import { User } from './utils/types';
+import { userApi, authApi } from './api';
+import { User } from './types';
 import { Navbar } from './components/Navbar';
 import { LoginView } from './components/LoginView';
 import { RegisterView } from './components/RegisterView';

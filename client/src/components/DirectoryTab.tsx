@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { directoryApi } from '../utils/api';
-import { Department, LocationItem, Category, Supplier, InventoryAudit, User } from '../utils/types';
+import { directoryApi } from '../api';
+import { Department, LocationItem, Category, Supplier, InventoryAudit, User } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { FormField } from './FormField';
 

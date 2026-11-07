@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ZxcvbnFactory } from '@zxcvbn-ts/core';
 import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common';
 import * as zxcvbnRuPackage from '@zxcvbn-ts/language-ru';
-import { authApi } from '../utils/api';
-import { User } from '../utils/types';
+import { authApi } from '../api';
+import { User } from '../types';
 import { FormField } from './FormField';
 import { PasswordInput } from './PasswordInput';
 

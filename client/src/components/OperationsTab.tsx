@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { operationsApi, equipmentApi, directoryApi } from '../utils/api';
+import { operationsApi, equipmentApi, directoryApi } from '../api';
 import {
   MaintenanceLog, Transfer, PurchaseOrder, Equipment, LocationItem, Supplier, User,
   MaintenanceType, OrderStatus
-} from '../utils/types';
+} from '../types';
 import { useAlert } from '../context/AlertContext';
 import { FormField } from './FormField';
 
