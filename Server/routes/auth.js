@@ -1,7 +1,7 @@
 const express = require('express');
 const authRouter = express.Router();
-const { hashPassword } = require('../db/db');
-const { getUserByLogin, getUserById } = require('../db/users');
+const { verifyPassword, isLegacyPasswordHash } = require('../db/db');
+const { getUserByLogin, getUserById, updateUserPassword } = require('../db/users');
 const { saveRefreshToken, deleteByToken, getUserIdByToken } = require('../db/tokens');
 const {
   generateAccessToken,
@@ -26,8 +26,13 @@ authRouter.post('/login', async (req, res) => {
 
     const user = await getUserByLogin(String(login).trim());
 
-    if (!user || user.password !== hashPassword(String(password))) {
+    if (!user || !verifyPassword(String(password), user.password)) {
       return res.status(401).json({ message: 'Неверный логин или пароль' });
+    }
+
+    // Если пароль сохранён старым хэшем без соли — обновляем при успешном входе
+    if (isLegacyPasswordHash(user.password)) {
+      await updateUserPassword(user.id, String(password));
     }
 
     const accessToken = generateAccessToken(user);

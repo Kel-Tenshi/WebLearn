@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { userApi } from '../utils/api';
 import { User, UserRole } from '../utils/types';
+import { useAlert } from '../context/AlertContext';
 
 export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+  const { showAlert, showApiError } = useAlert();
   const [users, setUsers] = useState<User[]>([]);
+  const [resetting, setResetting] = useState(false);
 
   const loadUsers = async () => {
     try {
       const list = await userApi.getUsers();
       setUsers(list);
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) { showApiError(err); }
   };
 
   useEffect(() => { loadUsers(); }, []);
@@ -17,16 +20,38 @@ export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const handleRole = async (id: number, role: UserRole) => {
     try {
       await userApi.updateRole(id, role);
+      showAlert('Роль пользователя изменена', 'success');
       loadUsers();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) { showApiError(err); }
   };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Удалить пользователя?')) return;
     try {
       await userApi.deleteUser(id);
+      showAlert('Пользователь удалён', 'success');
       loadUsers();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) { showApiError(err); }
+  };
+
+  const handleResetDb = async () => {
+    const confirmed = window.confirm(
+      'Сбросить базу данных?\n\n' +
+      'Все оборудование, заявки, операции, справочники и пользователи будут удалены, ' +
+      'после чего база заново заполнится демонстрационными данными.\n\n' +
+      'Текущая сессия завершится — потребуется войти заново.'
+    );
+    if (!confirmed) return;
+
+    setResetting(true);
+    try {
+      const res = await userApi.resetDb();
+      showAlert(res.message, 'success');
+      window.setTimeout(() => window.location.reload(), 1200);
+    } catch (err: any) {
+      showApiError(err);
+      setResetting(false);
+    }
   };
 
   return (
@@ -68,6 +93,17 @@ export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
           ))}
         </tbody>
       </table>
+
+      <div className="card danger-zone">
+        <h3>Сброс базы данных</h3>
+        <p className="muted">
+          Удаляет все текущие данные и заново создаёт стандартный демонстрационный набор:
+          оборудование, заявки, операции и учётные записи.
+        </p>
+        <button className="danger" onClick={handleResetDb} disabled={resetting}>
+          {resetting ? 'Сброс...' : 'Сбросить базу данных'}
+        </button>
+      </div>
     </div>
   );
 };

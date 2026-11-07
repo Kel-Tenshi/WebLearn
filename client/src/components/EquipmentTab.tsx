@@ -48,18 +48,30 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
+    const invNumber = form.invNumber.trim();
+    const name = form.name.trim();
 
-    if (!form.invNumber.trim()) {
+    if (!invNumber) {
       errs.invNumber = 'Укажите инвентарный номер';
-    } else if (form.invNumber.trim().length < 3) {
+    } else if (invNumber.length < 3) {
       errs.invNumber = 'Минимум 3 символа';
+    } else if (invNumber.length > 30) {
+      errs.invNumber = 'Максимум 30 символов';
     }
 
-    if (!form.name.trim()) {
+    if (!name) {
       errs.name = 'Укажите наименование техники';
+    } else if (name.length < 2) {
+      errs.name = 'Минимум 2 символа';
+    } else if (name.length > 120) {
+      errs.name = 'Максимум 120 символов';
     }
 
-    if (form.purchaseCost < 0) {
+    if (form.serialNumber.trim().length > 60) {
+      errs.serialNumber = 'Максимум 60 символов';
+    }
+
+    if (!Number.isFinite(form.purchaseCost) || form.purchaseCost < 0) {
       errs.purchaseCost = 'Стоимость не может быть меньше 0';
     }
 
@@ -74,6 +86,9 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
     try {
       const payload = {
         ...form,
+        invNumber: form.invNumber.trim(),
+        serialNumber: form.serialNumber.trim(),
+        name: form.name.trim(),
         categoryId: form.categoryId ? Number(form.categoryId) : null,
         locationId: form.locationId ? Number(form.locationId) : null,
         purchaseCost: Number(form.purchaseCost),
@@ -162,7 +177,10 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
               <input
                 placeholder="Серийный номер"
                 value={form.serialNumber}
-                onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, serialNumber: e.target.value });
+                  if (errors.serialNumber) setErrors({ ...errors, serialNumber: '' });
+                }}
               />
             </FormField>
 
@@ -181,7 +199,7 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: Number(e.target.value) })}
             >
-              <option value={0}>-- Категория --</option>
+              <option value={0}>Без категории</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -191,7 +209,7 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
               value={form.locationId}
               onChange={(e) => setForm({ ...form, locationId: Number(e.target.value) })}
             >
-              <option value={0}>-- Локация --</option>
+              <option value={0}>Без локации</option>
               {locations.map((l) => (
                 <option key={l.id} value={l.id}>{l.name}</option>
               ))}

@@ -4,8 +4,12 @@ import {
   MaintenanceLog, Transfer, PurchaseOrder, Equipment, LocationItem, Supplier, User,
   MaintenanceType, OrderStatus
 } from '../utils/types';
+import { useAlert } from '../context/AlertContext';
+import { FormField } from './FormField';
 
 export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
+  const { showAlert, showApiError } = useAlert();
+
   const [subTab, setSubTab] = useState<'maintenance' | 'transfers' | 'orders'>('maintenance');
 
   const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
@@ -22,6 +26,10 @@ export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
   const [mForm, setMForm] = useState({ equipmentId: 0, maintenanceType: 'Плановое ТО' as MaintenanceType, cost: 0, description: '' });
   const [tForm, setTForm] = useState({ equipmentId: 0, toLocationId: 0, reason: '' });
   const [oForm, setOForm] = useState({ orderNumber: '', supplierId: 0, title: '', totalAmount: 0 });
+
+  const [mErrors, setMErrors] = useState<Record<string, string>>({});
+  const [tErrors, setTErrors] = useState<Record<string, string>>({});
+  const [oErrors, setOErrors] = useState<Record<string, string>>({});
 
   const loadData = async () => {
     try {
@@ -40,51 +48,148 @@ export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
       setLocations(loc);
       setSuppliers(sup);
     } catch (e: any) {
-      alert(e.message);
+      showApiError(e);
     }
   };
 
   useEffect(() => { loadData(); }, []);
 
+  const validateMaintenance = (): boolean => {
+    const errs: Record<string, string> = {};
+
+    if (!mForm.equipmentId) {
+      errs.equipmentId = 'Выберите оборудование';
+    }
+
+    if (mForm.cost < 0) {
+      errs.cost = 'Стоимость не может быть отрицательной';
+    }
+
+    if (mForm.description.length > 300) {
+      errs.description = 'Описание не должно превышать 300 символов';
+    }
+
+    setMErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleCreateMaintenance = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateMaintenance()) return;
+
     try {
       await operationsApi.createMaintenance({ ...mForm, status: 'В процессе' });
       setMForm({ equipmentId: 0, maintenanceType: 'Плановое ТО', cost: 0, description: '' });
+      setMErrors({});
+      showAlert('Запись ТО добавлена', 'success');
       loadData();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) {
+      showApiError(err);
+    }
   };
 
   const handleFinishMaintenance = async (id: number) => {
     try {
       await operationsApi.updateMaintenanceStatus(id, 'Завершено');
+      showAlert('ТО завершено', 'success');
       loadData();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) {
+      showApiError(err);
+    }
+  };
+
+  const validateTransfer = (): boolean => {
+    const errs: Record<string, string> = {};
+
+    if (!tForm.equipmentId) {
+      errs.equipmentId = 'Выберите оборудование';
+    }
+
+    if (!tForm.toLocationId) {
+      errs.toLocationId = 'Выберите, куда переместить оборудование';
+    }
+
+    if (tForm.reason.length > 200) {
+      errs.reason = 'Причина не должна превышать 200 символов';
+    }
+
+    setTErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleCreateTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateTransfer()) return;
+
     try {
-      await operationsApi.createTransfer(tForm);
+      await operationsApi.createTransfer({ ...tForm, reason: tForm.reason.trim() });
       setTForm({ equipmentId: 0, toLocationId: 0, reason: '' });
+      setTErrors({});
+      showAlert('Перемещение оформлено', 'success');
       loadData();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) {
+      showApiError(err);
+    }
+  };
+
+  const validateOrder = (): boolean => {
+    const errs: Record<string, string> = {};
+    const orderNumber = oForm.orderNumber.trim();
+    const title = oForm.title.trim();
+
+    if (!orderNumber) {
+      errs.orderNumber = 'Укажите номер заказа';
+    } else if (orderNumber.length < 3) {
+      errs.orderNumber = 'Номер заказа должен содержать минимум 3 символа';
+    } else if (orderNumber.length > 30) {
+      errs.orderNumber = 'Номер заказа не должен превышать 30 символов';
+    }
+
+    if (!title) {
+      errs.title = 'Укажите назначение заказа';
+    } else if (title.length < 3) {
+      errs.title = 'Назначение должно содержать минимум 3 символа';
+    } else if (title.length > 200) {
+      errs.title = 'Назначение не должно превышать 200 символов';
+    }
+
+    if (oForm.totalAmount < 0) {
+      errs.totalAmount = 'Сумма не может быть отрицательной';
+    }
+
+    setOErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateOrder()) return;
+
     try {
-      await operationsApi.createOrder({ ...oForm, supplierId: oForm.supplierId || null, status: 'Согласован' });
+      await operationsApi.createOrder({
+        ...oForm,
+        orderNumber: oForm.orderNumber.trim(),
+        title: oForm.title.trim(),
+        supplierId: oForm.supplierId || null,
+        status: 'Согласован',
+      });
       setOForm({ orderNumber: '', supplierId: 0, title: '', totalAmount: 0 });
+      setOErrors({});
+      showAlert('Заказ создан', 'success');
       loadData();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) {
+      showApiError(err);
+    }
   };
 
   const handleOrderStatus = async (id: number, status: OrderStatus) => {
     try {
       await operationsApi.updateOrderStatus(id, status);
+      showAlert('Статус заказа обновлён', 'success');
       loadData();
-    } catch (err: any) { alert(err.message); }
+    } catch (err: any) {
+      showApiError(err);
+    }
   };
 
   return (
@@ -98,18 +203,49 @@ export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
       {subTab === 'maintenance' && (
         <>
           {canManage && (
-            <form onSubmit={handleCreateMaintenance} className="form-card">
+            <form onSubmit={handleCreateMaintenance} className="form-card" noValidate>
               <h3>Назначить ТО / Ремонт</h3>
               <div className="form-row">
-                <select value={mForm.equipmentId} onChange={(e) => setMForm({ ...mForm, equipmentId: Number(e.target.value) })} required>
-                  <option value={0}>-- Оборудование --</option>
-                  {equipment.map((e) => <option key={e.id} value={e.id}>{e.invNumber} ({e.name})</option>)}
-                </select>
+                <FormField error={mErrors.equipmentId}>
+                  <select
+                    value={mForm.equipmentId}
+                    onChange={(e) => {
+                      setMForm({ ...mForm, equipmentId: Number(e.target.value) });
+                      if (mErrors.equipmentId) setMErrors({ ...mErrors, equipmentId: '' });
+                    }}
+                  >
+                    <option value={0} disabled>Выберите оборудование</option>
+                    {equipment.map((e) => <option key={e.id} value={e.id}>{e.invNumber} ({e.name})</option>)}
+                  </select>
+                </FormField>
+
                 <select value={mForm.maintenanceType} onChange={(e) => setMForm({ ...mForm, maintenanceType: e.target.value as MaintenanceType })}>
                   {['Плановое ТО', 'Аварийный ремонт', 'Калибровка/Поверка', 'Модернизация'].map((t) => <option key={t}>{t}</option>)}
                 </select>
-                <input type="number" placeholder="Стоимость, ₽" value={mForm.cost} onChange={(e) => setMForm({ ...mForm, cost: Number(e.target.value) })} />
-                <input placeholder="Описание работ" value={mForm.description} onChange={(e) => setMForm({ ...mForm, description: e.target.value })} />
+
+                <FormField error={mErrors.cost}>
+                  <input
+                    type="number"
+                    placeholder="Стоимость, ₽"
+                    value={mForm.cost}
+                    onChange={(e) => {
+                      setMForm({ ...mForm, cost: Number(e.target.value) });
+                      if (mErrors.cost) setMErrors({ ...mErrors, cost: '' });
+                    }}
+                  />
+                </FormField>
+
+                <FormField error={mErrors.description}>
+                  <input
+                    placeholder="Описание работ"
+                    value={mForm.description}
+                    onChange={(e) => {
+                      setMForm({ ...mForm, description: e.target.value });
+                      if (mErrors.description) setMErrors({ ...mErrors, description: '' });
+                    }}
+                  />
+                </FormField>
+
                 <button type="submit" className="primary">Назначить</button>
               </div>
             </form>
@@ -155,18 +291,46 @@ export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
       {subTab === 'transfers' && (
         <>
           {canManage && (
-            <form onSubmit={handleCreateTransfer} className="form-card">
+            <form onSubmit={handleCreateTransfer} className="form-card" noValidate>
               <h3>Оформить перемещение</h3>
               <div className="form-row">
-                <select value={tForm.equipmentId} onChange={(e) => setTForm({ ...tForm, equipmentId: Number(e.target.value) })} required>
-                  <option value={0}>-- Оборудование --</option>
-                  {equipment.map((e) => <option key={e.id} value={e.id}>{e.invNumber} ({e.name})</option>)}
-                </select>
-                <select value={tForm.toLocationId} onChange={(e) => setTForm({ ...tForm, toLocationId: Number(e.target.value) })} required>
-                  <option value={0}>-- Куда переместить --</option>
-                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-                <input placeholder="Причина / Приказ" value={tForm.reason} onChange={(e) => setTForm({ ...tForm, reason: e.target.value })} />
+                <FormField error={tErrors.equipmentId}>
+                  <select
+                    value={tForm.equipmentId}
+                    onChange={(e) => {
+                      setTForm({ ...tForm, equipmentId: Number(e.target.value) });
+                      if (tErrors.equipmentId) setTErrors({ ...tErrors, equipmentId: '' });
+                    }}
+                  >
+                    <option value={0} disabled>Выберите оборудование</option>
+                    {equipment.map((e) => <option key={e.id} value={e.id}>{e.invNumber} ({e.name})</option>)}
+                  </select>
+                </FormField>
+
+                <FormField error={tErrors.toLocationId}>
+                  <select
+                    value={tForm.toLocationId}
+                    onChange={(e) => {
+                      setTForm({ ...tForm, toLocationId: Number(e.target.value) });
+                      if (tErrors.toLocationId) setTErrors({ ...tErrors, toLocationId: '' });
+                    }}
+                  >
+                    <option value={0} disabled>Выберите локацию</option>
+                    {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  </select>
+                </FormField>
+
+                <FormField error={tErrors.reason}>
+                  <input
+                    placeholder="Причина / Приказ"
+                    value={tForm.reason}
+                    onChange={(e) => {
+                      setTForm({ ...tForm, reason: e.target.value });
+                      if (tErrors.reason) setTErrors({ ...tErrors, reason: '' });
+                    }}
+                  />
+                </FormField>
+
                 <button type="submit" className="primary">Переместить</button>
               </div>
             </form>
@@ -204,16 +368,48 @@ export const OperationsTab: React.FC<{ user: User }> = ({ user }) => {
       {subTab === 'orders' && (
         <>
           {canManage && (
-            <form onSubmit={handleCreateOrder} className="form-card">
+            <form onSubmit={handleCreateOrder} className="form-card" noValidate>
               <h3>Создать заказ на закупку</h3>
               <div className="form-row">
-                <input placeholder="Номер заказа" value={oForm.orderNumber} onChange={(e) => setOForm({ ...oForm, orderNumber: e.target.value })} required />
+                <FormField error={oErrors.orderNumber}>
+                  <input
+                    placeholder="Номер заказа"
+                    value={oForm.orderNumber}
+                    onChange={(e) => {
+                      setOForm({ ...oForm, orderNumber: e.target.value });
+                      if (oErrors.orderNumber) setOErrors({ ...oErrors, orderNumber: '' });
+                    }}
+                  />
+                </FormField>
+
                 <select value={oForm.supplierId} onChange={(e) => setOForm({ ...oForm, supplierId: Number(e.target.value) })}>
-                  <option value={0}>-- Поставщик --</option>
+                  <option value={0}>Без поставщика</option>
                   {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
-                <input placeholder="Наименование" value={oForm.title} onChange={(e) => setOForm({ ...oForm, title: e.target.value })} required />
-                <input type="number" placeholder="Сумма, ₽" value={oForm.totalAmount} onChange={(e) => setOForm({ ...oForm, totalAmount: Number(e.target.value) })} />
+
+                <FormField error={oErrors.title}>
+                  <input
+                    placeholder="Наименование"
+                    value={oForm.title}
+                    onChange={(e) => {
+                      setOForm({ ...oForm, title: e.target.value });
+                      if (oErrors.title) setOErrors({ ...oErrors, title: '' });
+                    }}
+                  />
+                </FormField>
+
+                <FormField error={oErrors.totalAmount}>
+                  <input
+                    type="number"
+                    placeholder="Сумма, ₽"
+                    value={oForm.totalAmount}
+                    onChange={(e) => {
+                      setOForm({ ...oForm, totalAmount: Number(e.target.value) });
+                      if (oErrors.totalAmount) setOErrors({ ...oErrors, totalAmount: '' });
+                    }}
+                  />
+                </FormField>
+
                 <button type="submit" className="primary">Создать заказ</button>
               </div>
             </form>

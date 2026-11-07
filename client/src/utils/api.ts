@@ -74,10 +74,10 @@ export const authApi = {
     }),
   refresh: () => request<{ ok: boolean; user: User }>('/auth/refresh', { method: 'POST' }),
   logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'DELETE' }),
-  register: (login: string, password: string) =>
+  register: (login: string, password: string, fullName?: string) =>
     request<User>('/user/register', {
       method: 'POST',
-      body: JSON.stringify({ login, password }),
+      body: JSON.stringify({ login, password, fullName }),
     }),
 };
 
@@ -90,6 +90,8 @@ export const userApi = {
       body: JSON.stringify({ role }),
     }),
   deleteUser: (id: number) => request<{ message: string }>(`/user/${id}`, { method: 'DELETE' }),
+  resetDb: () =>
+    request<{ ok: boolean; message: string }>('/user/reset-db', { method: 'POST' }),
 };
 
 export const equipmentApi = {

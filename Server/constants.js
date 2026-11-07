@@ -1,5 +1,7 @@
 // Допустимые значения справочных полей, перечислений и настройки JWT
 
+const { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } = require('./config/secrets');
+
 module.exports = {
   // Роли пользователей
   USER_ROLES: ['employee', 'manager', 'admin'],
@@ -26,8 +28,8 @@ module.exports = {
   AUDIT_STATUSES: ['В процессе', 'Завершена', 'Выявлены расхождения'],
 
   // Настройки JWT (Access + Refresh)
-  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'access-secret-asu-equipment-2024',
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'refresh-secret-asu-equipment-2024',
+  JWT_ACCESS_SECRET,
+  JWT_REFRESH_SECRET,
   ACCESS_TOKEN_EXPIRES_IN: '15m', // Короткоживущий токен: 15 минут
   REFRESH_TOKEN_EXPIRES_IN: '7d', // Долгоживущий токен: 7 дней
   ACCESS_COOKIE_MAX_AGE: 15 * 60 * 1000,

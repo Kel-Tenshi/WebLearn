@@ -16,7 +16,8 @@ export const FormField: React.FC<FormFieldProps> = ({ label, error, children, st
         {error && (
           <div className="field-tooltip" role="alert">
             <span className="tooltip-arrow" />
-            {error}
+            <span className="tooltip-icon">!</span>
+            <span className="tooltip-text">{error}</span>
           </div>
         )}
       </div>

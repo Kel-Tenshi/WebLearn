@@ -5,9 +5,52 @@ const crypto = require('crypto');
 
 let db;
 
-// Хэширование паролей
+// Хэширование паролей: SHA-256 со случайной солью.
+// Формат хранения: sha256$<salt>$<hash>
+const PASSWORD_HASH_PREFIX = 'sha256';
+
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${salt}:${password}`)
+    .digest('hex');
+
+  return `${PASSWORD_HASH_PREFIX}$${salt}$${hash}`;
+}
+
+// Сравнение строк без утечки по времени
+function safeEqual(a, b) {
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+// Проверка пароля. Поддерживает старый формат без соли,
+// чтобы уже созданные учётные записи не сломались.
+function verifyPassword(password, storedHash) {
+  if (!storedHash) return false;
+
+  if (storedHash.startsWith(`${PASSWORD_HASH_PREFIX}$`)) {
+    const [, salt, hash] = storedHash.split('$');
+    if (!salt || !hash) return false;
+
+    const computed = crypto
+      .createHash('sha256')
+      .update(`${salt}:${password}`)
+      .digest('hex');
+
+    return safeEqual(computed, hash);
+  }
+
+  const legacyHash = crypto.createHash('sha256').update(password).digest('hex');
+  return safeEqual(legacyHash, storedHash);
+}
+
+// Старый формат — 64 hex-символа без префикса и соли
+function isLegacyPasswordHash(storedHash) {
+  return typeof storedHash === 'string' && !storedHash.startsWith(`${PASSWORD_HASH_PREFIX}$`);
 }
 
 // Добавляет колонку в таблицу при необходимости (мягкая миграция)
@@ -323,8 +366,49 @@ const initDb = async () => {
 
 const getDb = () => db;
 
+// Порядок важен: сначала зависимые таблицы, затем справочники
+const RESET_TABLES = [
+  'tokens',
+  'inventory_audits',
+  'orders',
+  'transfers',
+  'maintenance_logs',
+  'requests',
+  'equipment',
+  'suppliers',
+  'users',
+  'categories',
+  'locations',
+  'departments'
+];
+
+// Полный сброс БД: чистим все таблицы и заново запускаем initDb,
+// который создаёт структуру и заполняет её демонстрационными данными.
+async function resetDb() {
+  if (!db) {
+    throw new Error('База данных не инициализирована');
+  }
+
+  await db.exec('PRAGMA foreign_keys = OFF;');
+  try {
+    for (const table of RESET_TABLES) {
+      await db.run(`DELETE FROM ${table}`);
+    }
+    // Сбрасываем счётчики AUTOINCREMENT, чтобы id снова начинались с 1
+    await db.run('DELETE FROM sqlite_sequence').catch(() => {});
+  } finally {
+    await db.exec('PRAGMA foreign_keys = ON;');
+  }
+
+  await initDb();
+  return true;
+}
+
 module.exports = {
   initDb,
+  resetDb,
   getDb,
-  hashPassword
+  hashPassword,
+  verifyPassword,
+  isLegacyPasswordHash
 };

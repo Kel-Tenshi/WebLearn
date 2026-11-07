@@ -5,18 +5,19 @@ const TABLE_NAME = 'users';
 module.exports = {
   TABLE_NAME,
 
-  // Создать пользователя (пароль сохраняется в виде sha256-хэша).
+  // Создать пользователя (пароль сохраняется в виде хэша с солью).
   // Роль по умолчанию — сотрудник.
-  addUser: async (login, password, role = 'employee') => {
+  addUser: async (login, password, role = 'employee', fullName = null) => {
     try {
       const hashedPassword = hashPassword(password);
       const result = await getDb().run(
-        `INSERT INTO ${TABLE_NAME} (login, password, role) VALUES (?, ?, ?)`,
+        `INSERT INTO ${TABLE_NAME} (login, password, role, fullName) VALUES (?, ?, ?, ?)`,
         login,
         hashedPassword,
-        role
+        role,
+        fullName
       );
-      return { id: result.lastID, login, role };
+      return { id: result.lastID, login, role, fullName };
     } catch (error) {
       console.error('db/users addUser:', error);
       throw error;
@@ -40,7 +41,9 @@ module.exports = {
   // Список пользователей (без паролей)
   getUsers: async () => {
     try {
-      return await getDb().all(`SELECT id, login, role FROM ${TABLE_NAME} ORDER BY id`);
+      return await getDb().all(
+        `SELECT id, login, role, fullName, departmentId FROM ${TABLE_NAME} ORDER BY id`
+      );
     } catch (error) {
       console.error('db/users getUsers:', error);
       throw error;
@@ -60,9 +63,27 @@ module.exports = {
   // Найти пользователя по id (без пароля)
   getUserById: async (id) => {
     try {
-      return await getDb().get(`SELECT id, login, role FROM ${TABLE_NAME} WHERE id = ?`, id);
+      return await getDb().get(
+        `SELECT id, login, role, fullName, departmentId FROM ${TABLE_NAME} WHERE id = ?`,
+        id
+      );
     } catch (error) {
       console.error('db/users getUserById:', error);
+      throw error;
+    }
+  },
+
+  // Перехешировать пароль (например, при входе со старым хэшем без соли)
+  updateUserPassword: async (id, password) => {
+    try {
+      const result = await getDb().run(
+        `UPDATE ${TABLE_NAME} SET password = ? WHERE id = ?`,
+        hashPassword(password),
+        id
+      );
+      return result.changes;
+    } catch (error) {
+      console.error('db/users updateUserPassword:', error);
       throw error;
     }
   },

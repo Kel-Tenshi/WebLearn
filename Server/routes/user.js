@@ -7,9 +7,14 @@ const {
   updateUserRole,
   deleteUser
 } = require('../db/users');
+const { resetDb } = require('../db/db');
 const authMiddleware = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
-const { USER_ROLES } = require('../constants');
+const {
+  USER_ROLES,
+  COOKIE_ACCESS_NAME,
+  COOKIE_REFRESH_NAME
+} = require('../constants');
 
 const userRouter = express.Router();
 
@@ -32,13 +37,14 @@ userRouter.get('/me', authMiddleware, async (req, res) => {
 // Роль выдаётся всегда «employee»: выбрать себе роль при регистрации нельзя.
 userRouter.post('/register', async (req, res) => {
   try {
-    const { login, password } = req.body || {};
+    const { login, password, fullName } = req.body || {};
 
     if (!login || !password) {
       return res.status(400).json({ message: 'Введите логин и пароль' });
     }
 
     const cleanLogin = String(login).trim();
+    const cleanFullName = fullName ? String(fullName).trim() : '';
 
     if (cleanLogin.length < 3) {
       return res.status(400).json({ message: 'Логин должен содержать не менее 3 символов' });
@@ -48,15 +54,44 @@ userRouter.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Пароль должен содержать не менее 6 символов' });
     }
 
+    if (cleanFullName.length > 120) {
+      return res.status(400).json({ message: 'ФИО не должно превышать 120 символов' });
+    }
+
     const user = await getUserByLogin(cleanLogin);
     if (user) {
       return res.status(400).json({ message: 'Такой пользователь уже есть' });
     }
 
-    const newUser = await addUser(cleanLogin, String(password), 'employee');
+    const newUser = await addUser(
+      cleanLogin,
+      String(password),
+      'employee',
+      cleanFullName || null
+    );
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ message: 'Ошибка при регистрации пользователя' });
+  }
+});
+
+// Сброс базы данных к демонстрационному состоянию (только администратор)
+userRouter.post('/reset-db', authMiddleware, requireRole('admin'), async (req, res) => {
+  try {
+    await resetDb();
+
+    // После сброса все пользователи и токены пересозданы,
+    // поэтому завершаем текущую сессию и просим войти заново.
+    res.clearCookie(COOKIE_ACCESS_NAME);
+    res.clearCookie(COOKIE_REFRESH_NAME);
+
+    res.json({
+      ok: true,
+      message: 'База данных сброшена к значениям по умолчанию'
+    });
+  } catch (error) {
+    console.error('reset-db error:', error);
+    res.status(500).json({ message: 'Ошибка при сбросе базы данных' });
   }
 });
 
