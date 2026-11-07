@@ -12,6 +12,7 @@ export function useEquipment() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     try {
       const [equipment, categoriesList, locationsList] = await Promise.all([
         equipmentApi.getAll(),

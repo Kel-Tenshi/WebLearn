@@ -26,7 +26,11 @@ export const UsersTable: React.FC<Props> = ({
         </tr>
       </thead>
       <tbody>
-        {users.map((user) => (
+        {users.length === 0 ? (
+          <tr>
+            <td colSpan={5} align="center">Пользователей пока нет</td>
+          </tr>
+        ) : users.map((user) => (
           <tr key={user.id}>
             <td>{user.id}</td>
             <td><b>{user.login}</b></td>

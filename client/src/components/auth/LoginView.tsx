@@ -44,7 +44,7 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
     try {
       const res = await authApi.login(login.trim(), password);
       onSuccess(res.user);
-      navigate('/equipment');
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
     }

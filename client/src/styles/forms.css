@@ -1,3 +1,19 @@
+/* Поле, которое занимает всё свободное место в строке формы */
+.field-grow {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.field-grow .field-control {
+  display: block;
+  width: 100%;
+}
+
+.field-grow input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Поле пароля с кнопкой показа/скрытия */
 .password-input {
   position: relative;

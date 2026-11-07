@@ -20,19 +20,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   padding: 10px 24px;
   background: #0f172a;
   color: #fff;
 }
 
 .brand {
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  color: #fff;
   font-size: 16px;
   font-weight: 700;
+  cursor: pointer;
+}
+
+.brand:hover {
+  opacity: 0.85;
 }
 
 .tabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .tabs button {
@@ -51,9 +64,28 @@ body {
   font-weight: 600;
 }
 
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.profile button {
+  background: transparent;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.profile button:hover {
+  background: #1e293b;
+}
+
 .sub-nav {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
@@ -92,6 +124,10 @@ body {
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.form-row > button {
+  flex: 0 0 auto;
 }
 
 input,

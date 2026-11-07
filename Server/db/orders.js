@@ -15,6 +15,15 @@ module.exports = {
     }
   },
 
+  getOrderById: async (id) => {
+    try {
+      return await getDb().get('SELECT * FROM orders WHERE id = ?', id);
+    } catch (error) {
+      console.error('db/orders getOrderById:', error);
+      throw error;
+    }
+  },
+
   addOrder: async ({ orderNumber, supplierId, title, totalAmount, status, createdBy }) => {
     try {
       const orderDate = new Date().toISOString().slice(0, 10);

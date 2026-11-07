@@ -64,7 +64,7 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
       await authApi.register(cleanLogin, password, fullName.trim() || undefined);
       const res = await authApi.login(cleanLogin, password);
       onSuccess(res.user);
-      navigate('/equipment');
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
     }

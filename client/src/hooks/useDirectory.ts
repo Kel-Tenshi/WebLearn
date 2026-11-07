@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { directoryApi } from '../api';
-import { Category, Department, InventoryAudit, LocationItem, Supplier } from '../types';
+import { Category, Department, LocationItem, Supplier } from '../types';
 import { useAlert } from '../context/AlertContext';
 
 export function useDirectory() {
@@ -10,25 +10,23 @@ export function useDirectory() {
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [audits, setAudits] = useState<InventoryAudit[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     try {
-      const [departmentList, locationList, categoryList, supplierList, auditList] =
+      const [departmentList, locationList, categoryList, supplierList] =
         await Promise.all([
           directoryApi.getDepartments(),
           directoryApi.getLocations(),
           directoryApi.getCategories(),
           directoryApi.getSuppliers(),
-          directoryApi.getAudits(),
         ]);
 
       setDepartments(departmentList);
       setLocations(locationList);
       setCategories(categoryList);
       setSuppliers(supplierList);
-      setAudits(auditList);
     } catch (error) {
       showApiError(error);
     } finally {
@@ -45,13 +43,11 @@ export function useDirectory() {
     locations,
     categories,
     suppliers,
-    audits,
     loading,
     reload,
     createDepartment: directoryApi.createDepartment,
+    createLocation: directoryApi.createLocation,
     createCategory: directoryApi.createCategory,
     createSupplier: directoryApi.createSupplier,
-    createAudit: directoryApi.createAudit,
-    updateAuditStatus: directoryApi.updateAuditStatus,
   };
 }

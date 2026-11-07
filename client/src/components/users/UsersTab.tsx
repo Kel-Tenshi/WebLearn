@@ -4,10 +4,11 @@ import { useUsers } from '../../hooks/useUsers';
 import { useAlert } from '../../context/AlertContext';
 import { UsersTable } from './UsersTable';
 import { ResetDatabaseCard } from './ResetDatabaseCard';
+import { Loading } from '../ui/Loading';
 
 export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const { showAlert, showApiError } = useAlert();
-  const { users, reload, updateRole, deleteUser, resetDb } = useUsers();
+  const { users, loading, reload, updateRole, deleteUser, resetDb } = useUsers();
 
   const handleRole = async (id: number, role: UserRole) => {
     try {
@@ -42,9 +43,18 @@ export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="tab-container">
+        <h2>Пользователи</h2>
+        <Loading label="Загрузка пользователей…" />
+      </div>
+    );
+  }
+
   return (
     <div className="tab-container">
-      <h2>Управление пользователями (Администратор)</h2>
+      <h2>Пользователи</h2>
 
       <UsersTable
         users={users}

@@ -15,6 +15,15 @@ module.exports = {
     }
   },
 
+  getAuditById: async (id) => {
+    try {
+      return await getDb().get('SELECT * FROM inventory_audits WHERE id = ?', id);
+    } catch (error) {
+      console.error('db/audits getAuditById:', error);
+      throw error;
+    }
+  },
+
   addAudit: async ({ auditDate, locationId, auditor, status, notes }) => {
     try {
       const res = await getDb().run(

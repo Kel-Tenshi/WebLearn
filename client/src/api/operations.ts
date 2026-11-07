@@ -1,4 +1,11 @@
-import { MaintenanceLog, MaintenanceStatus, OrderStatus, PurchaseOrder, Transfer } from '../types';
+import {
+  MaintenanceLog,
+  MaintenanceStatus,
+  OrderStatus,
+  PurchaseOrder,
+  Transfer,
+  TransferStatus,
+} from '../types';
 import { request } from './http';
 
 export const operationsApi = {
@@ -14,6 +21,11 @@ export const operationsApi = {
   getTransfers: () => request<Transfer[]>('/api/operations/transfers'),
   createTransfer: (data: { equipmentId: number; toLocationId: number; reason?: string }) =>
     request<Transfer>('/api/operations/transfers', { method: 'POST', body: JSON.stringify(data) }),
+  updateTransferStatus: (id: number, status: TransferStatus) =>
+    request<{ ok: boolean; status: string }>(`/api/operations/transfers/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 
   getOrders: () => request<PurchaseOrder[]>('/api/operations/orders'),
   createOrder: (data: Partial<PurchaseOrder>) =>

@@ -4,10 +4,11 @@ import { useRequests } from '../../hooks/useRequests';
 import { useAlert } from '../../context/AlertContext';
 import { RequestForm } from './RequestForm';
 import { RequestsTable } from './RequestsTable';
+import { Loading } from '../ui/Loading';
 
 export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { requests, equipment, reload, create, updateStatus } = useRequests();
+  const { requests, equipment, loading, reload, create, updateStatus } = useRequests();
 
   const canManage = user.role === 'manager' || user.role === 'admin';
 
@@ -32,6 +33,15 @@ export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="tab-container">
+        <h2>Заявки</h2>
+        <Loading label="Загрузка заявок…" />
+      </div>
+    );
+  }
+
   return (
     <div className="tab-container">
       <h2>Заявки</h2>
@@ -41,6 +51,7 @@ export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
       <RequestsTable
         requests={requests}
         canManage={canManage}
+        currentUserLogin={user.login}
         onStatusChange={handleStatusChange}
       />
     </div>

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Supplier } from '../../types';
 import { FormField } from '../ui/FormField';
+import { useForm } from '../../hooks/useForm';
+import { collect, minTextLength, requiredText } from '../../utils/validation';
 
 interface Props {
   items: Supplier[];
@@ -8,36 +10,39 @@ interface Props {
   onCreate: (data: Partial<Supplier>) => Promise<void>;
 }
 
+interface FormState {
+  name: string;
+  inn: string;
+}
+
+const EMPTY_FORM: FormState = { name: '', inn: '' };
+
+const validateSupplier = (values: FormState) =>
+  collect({
+    name:
+      requiredText(values.name, 'Укажите название организации') ||
+      minTextLength(values.name, 2, 'Название должно содержать минимум 2 символа'),
+    inn:
+      values.inn.trim() && !/^\d{10}$|^\d{12}$/.test(values.inn.trim())
+        ? 'ИНН должен состоять из 10 или 12 цифр'
+        : undefined,
+  });
+
 export const SuppliersCard: React.FC<Props> = ({ items, canManage, onCreate }) => {
-  const [name, setName] = useState('');
-  const [inn, setInn] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateSupplier);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errs: Record<string, string> = {};
-    if (!name.trim()) {
-      errs.name = 'Укажите название организации';
-    } else if (name.trim().length < 2) {
-      errs.name = 'Название должно содержать минимум 2 символа';
-    }
-    if (inn.trim() && !/^\d{10}$|^\d{12}$/.test(inn.trim())) {
-      errs.inn = 'ИНН должен состоять из 10 или 12 цифр';
-    }
-
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ name: name.trim(), inn: inn.trim() || undefined });
-      setName('');
-      setInn('');
-      setErrors({});
+      await onCreate({
+        name: current.name.trim(),
+        inn: current.inn.trim() || undefined,
+      });
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <div className="card">
@@ -47,24 +52,18 @@ export const SuppliersCard: React.FC<Props> = ({ items, canManage, onCreate }) =
           <FormField error={errors.inn}>
             <input
               placeholder="ИНН"
-              value={inn}
-              onChange={(e) => {
-                setInn(e.target.value);
-                if (errors.inn) setErrors({ ...errors, inn: '' });
-              }}
+              value={values.inn}
+              onChange={(e) => setValue('inn', e.target.value)}
             />
           </FormField>
           <FormField error={errors.name}>
             <input
               placeholder="Название"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (errors.name) setErrors({ ...errors, name: '' });
-              }}
+              value={values.name}
+              onChange={(e) => setValue('name', e.target.value)}
             />
           </FormField>
-          <button type="submit">+</button>
+          <button type="submit" disabled={submitting}>+</button>
         </form>
       )}
       <ul>

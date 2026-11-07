@@ -1,6 +1,12 @@
 export type RequestType = 'Перемещение' | 'Списание' | 'Закупка' | 'Ремонт';
 export type RequestPriority = 'Низкий' | 'Средний' | 'Высокий' | 'Критический';
-export type RequestStatus = 'На согласовании' | 'Одобрено' | 'Отклонено' | 'Выполнено';
+export type RequestStatus =
+  | 'На согласовании'
+  | 'Одобрено'
+  | 'В работе'
+  | 'Выполнено'
+  | 'Отклонено'
+  | 'Отменено';
 
 export interface RequestItem {
   id: number;

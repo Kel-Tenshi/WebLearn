@@ -1,44 +1,41 @@
 import { useCallback, useEffect, useState } from 'react';
-import { directoryApi, equipmentApi, operationsApi } from '../api';
+import { equipmentApi, operationsApi, requestsApi } from '../api';
 import {
   Equipment,
-  LocationItem,
   MaintenanceLog,
   PurchaseOrder,
-  Supplier,
+  RequestItem,
   Transfer,
 } from '../types';
 import { useAlert } from '../context/AlertContext';
 
-export function useOperations() {
+export function useDashboard() {
   const { showApiError } = useAlert();
 
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [locations, setLocations] = useState<LocationItem[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     try {
-      const [maintenanceList, transferList, orderList, equipmentList, locationList, supplierList] =
+      const [requestList, equipmentList, maintenanceList, transferList, orderList] =
         await Promise.all([
+          requestsApi.getAll(),
+          equipmentApi.getAll(),
           operationsApi.getMaintenance(),
           operationsApi.getTransfers(),
           operationsApi.getOrders(),
-          equipmentApi.getAll(),
-          directoryApi.getLocations(),
-          directoryApi.getSuppliers(),
         ]);
 
+      setRequests(requestList);
+      setEquipment(equipmentList);
       setMaintenance(maintenanceList);
       setTransfers(transferList);
       setOrders(orderList);
-      setEquipment(equipmentList);
-      setLocations(locationList);
-      setSuppliers(supplierList);
     } catch (error) {
       showApiError(error);
     } finally {
@@ -51,18 +48,12 @@ export function useOperations() {
   }, [reload]);
 
   return {
+    requests,
+    equipment,
     maintenance,
     transfers,
     orders,
-    equipment,
-    locations,
-    suppliers,
     loading,
     reload,
-    createMaintenance: operationsApi.createMaintenance,
-    updateMaintenanceStatus: operationsApi.updateMaintenanceStatus,
-    createTransfer: operationsApi.createTransfer,
-    createOrder: operationsApi.createOrder,
-    updateOrderStatus: operationsApi.updateOrderStatus,
   };
 }

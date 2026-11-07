@@ -11,6 +11,7 @@ export function useRequests() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     try {
       const [requestList, equipmentList] = await Promise.all([
         requestsApi.getAll(),

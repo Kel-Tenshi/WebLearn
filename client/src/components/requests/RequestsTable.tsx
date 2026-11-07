@@ -1,15 +1,37 @@
 import React from 'react';
 import { RequestItem, RequestStatus } from '../../types';
+import { StatusBadge } from '../ui/StatusBadge';
+import { StatusActions } from '../ui/StatusActions';
+import { getNextStatuses, getStatusActions } from '../../config/statusMachine';
+import type { StatusAction } from '../../config/statusMachine';
 
 interface Props {
   requests: RequestItem[];
   canManage: boolean;
+  currentUserLogin: string;
   onStatusChange: (id: number, status: RequestStatus) => void;
 }
 
-const STATUSES: RequestStatus[] = ['На согласовании', 'Одобрено', 'Отклонено', 'Выполнено'];
+export const RequestsTable: React.FC<Props> = ({
+  requests,
+  canManage,
+  currentUserLogin,
+  onStatusChange,
+}) => {
+  const getActions = (request: RequestItem): StatusAction[] => {
+    if (canManage) return getStatusActions('request', request.status);
 
-export const RequestsTable: React.FC<Props> = ({ requests, canManage, onStatusChange }) => {
+    // Сотрудник может отменить только свою заявку и только до выполнения.
+    if (
+      request.applicant === currentUserLogin &&
+      getNextStatuses('request', request.status).includes('Отменено')
+    ) {
+      return [{ to: 'Отменено', label: 'Отменить', tone: 'danger' }];
+    }
+
+    return [];
+  };
+
   return (
     <table className="data-table">
       <thead>
@@ -22,12 +44,13 @@ export const RequestsTable: React.FC<Props> = ({ requests, canManage, onStatusCh
           <th>Заявитель</th>
           <th>Приоритет</th>
           <th>Статус</th>
+          <th>Действия</th>
         </tr>
       </thead>
       <tbody>
         {requests.length === 0 ? (
           <tr>
-            <td colSpan={8} align="center">Заявок пока нет</td>
+            <td colSpan={9} align="center">Заявок пока нет</td>
           </tr>
         ) : (
           requests.map((request) => (
@@ -39,19 +62,12 @@ export const RequestsTable: React.FC<Props> = ({ requests, canManage, onStatusCh
               <td>{request.invNumber ? `${request.invNumber} (${request.equipmentName})` : '—'}</td>
               <td>{request.applicant}</td>
               <td><span className="badge">{request.priority}</span></td>
+              <td><StatusBadge status={request.status} /></td>
               <td>
-                {canManage ? (
-                  <select
-                    value={request.status}
-                    onChange={(e) => onStatusChange(request.id, e.target.value as RequestStatus)}
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="badge">{request.status}</span>
-                )}
+                <StatusActions
+                  actions={getActions(request)}
+                  onChange={(status) => onStatusChange(request.id, status as RequestStatus)}
+                />
               </td>
             </tr>
           ))

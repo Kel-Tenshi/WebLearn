@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Category } from '../../types';
 import { FormField } from '../ui/FormField';
+import { useForm } from '../../hooks/useForm';
+import { collect, minTextLength, requiredText } from '../../utils/validation';
 
 interface Props {
   items: Category[];
@@ -8,38 +10,35 @@ interface Props {
   onCreate: (data: { name: string; code: string }) => Promise<void>;
 }
 
+interface FormState {
+  name: string;
+  code: string;
+}
+
+const EMPTY_FORM: FormState = { name: '', code: '' };
+
+const validateCategory = (values: FormState) =>
+  collect({
+    code:
+      requiredText(values.code, 'Укажите код категории') ||
+      minTextLength(values.code, 2, 'Код должен содержать минимум 2 символа'),
+    name:
+      requiredText(values.name, 'Укажите название категории') ||
+      minTextLength(values.name, 2, 'Название должно содержать минимум 2 символа'),
+  });
+
 export const CategoriesCard: React.FC<Props> = ({ items, canManage, onCreate }) => {
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateCategory);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const errs: Record<string, string> = {};
-    if (!code.trim()) {
-      errs.code = 'Укажите код категории';
-    } else if (code.trim().length < 2) {
-      errs.code = 'Код должен содержать минимум 2 символа';
-    }
-    if (!name.trim()) {
-      errs.name = 'Укажите название категории';
-    } else if (name.trim().length < 2) {
-      errs.name = 'Название должно содержать минимум 2 символа';
-    }
-
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ name: name.trim(), code: code.trim() });
-      setName('');
-      setCode('');
-      setErrors({});
+      await onCreate({ name: current.name.trim(), code: current.code.trim() });
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <div className="card">
@@ -49,24 +48,18 @@ export const CategoriesCard: React.FC<Props> = ({ items, canManage, onCreate }) 
           <FormField error={errors.code}>
             <input
               placeholder="Код"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value);
-                if (errors.code) setErrors({ ...errors, code: '' });
-              }}
+              value={values.code}
+              onChange={(e) => setValue('code', e.target.value)}
             />
           </FormField>
           <FormField error={errors.name}>
             <input
               placeholder="Название"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (errors.name) setErrors({ ...errors, name: '' });
-              }}
+              value={values.name}
+              onChange={(e) => setValue('name', e.target.value)}
             />
           </FormField>
-          <button type="submit">+</button>
+          <button type="submit" disabled={submitting}>+</button>
         </form>
       )}
       <ul>

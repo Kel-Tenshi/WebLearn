@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Equipment, RequestItem, RequestPriority, RequestType } from '../../types';
 import { FormField } from '../ui/FormField';
+import { useForm } from '../../hooks/useForm';
+import {
+  collect,
+  maxTextLength,
+  minTextLength,
+  requiredText,
+} from '../../utils/validation';
 
 interface Props {
   equipment: Equipment[];
@@ -21,56 +28,42 @@ const EMPTY_FORM: FormState = {
   title: '',
 };
 
+const validateRequest = (values: FormState) =>
+  collect({
+    title:
+      requiredText(values.title, 'Укажите тему заявки') ||
+      minTextLength(values.title, 5, 'Тема должна содержать минимум 5 символов') ||
+      maxTextLength(values.title, 200, 'Тема не должна превышать 200 символов'),
+    equipmentId:
+      (values.type === 'Ремонт' || values.type === 'Перемещение') && !values.equipmentId
+        ? 'Выберите оборудование для этого типа заявки'
+        : undefined,
+  });
+
 export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateRequest);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-
-    if (!form.title.trim()) {
-      errs.title = 'Укажите тему заявки';
-    } else if (form.title.trim().length < 5) {
-      errs.title = 'Тема должна содержать минимум 5 символов';
-    } else if (form.title.trim().length > 200) {
-      errs.title = 'Тема не должна превышать 200 символов';
-    }
-
-    if ((form.type === 'Ремонт' || form.type === 'Перемещение') && !form.equipmentId) {
-      errs.equipmentId = 'Выберите оборудование для этого типа заявки';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
       await onSubmit({
-        ...form,
-        title: form.title.trim(),
-        equipmentId: form.equipmentId ? Number(form.equipmentId) : null,
+        ...current,
+        title: current.title.trim(),
+        equipmentId: current.equipmentId ? Number(current.equipmentId) : null,
       });
-      setForm({ ...EMPTY_FORM });
-      setErrors({});
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <form onSubmit={handleSubmit} className="form-card" noValidate>
       <h3>Новая заявка</h3>
       <div className="form-row">
         <select
-          value={form.type}
-          onChange={(e) => {
-            setForm({ ...form, type: e.target.value as RequestType });
-            if (errors.equipmentId) setErrors({ ...errors, equipmentId: '' });
-          }}
+          value={values.type}
+          onChange={(e) => setValue('type', e.target.value as RequestType)}
         >
           {['Перемещение', 'Списание', 'Закупка', 'Ремонт'].map((type) => (
             <option key={type}>{type}</option>
@@ -79,11 +72,8 @@ export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
 
         <FormField error={errors.equipmentId}>
           <select
-            value={form.equipmentId}
-            onChange={(e) => {
-              setForm({ ...form, equipmentId: Number(e.target.value) });
-              if (errors.equipmentId) setErrors({ ...errors, equipmentId: '' });
-            }}
+            value={values.equipmentId}
+            onChange={(e) => setValue('equipmentId', Number(e.target.value))}
           >
             <option value={0}>Оборудование не выбрано</option>
             {equipment.map((item) => (
@@ -95,27 +85,23 @@ export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
         </FormField>
 
         <select
-          value={form.priority}
-          onChange={(e) => setForm({ ...form, priority: e.target.value as RequestPriority })}
+          value={values.priority}
+          onChange={(e) => setValue('priority', e.target.value as RequestPriority)}
         >
           {['Низкий', 'Средний', 'Высокий', 'Критический'].map((priority) => (
             <option key={priority}>{priority}</option>
           ))}
         </select>
 
-        <FormField error={errors.title} style={{ flex: 1 }}>
+        <FormField error={errors.title} className="field-grow">
           <input
             placeholder="Тема / основание *"
-            value={form.title}
-            onChange={(e) => {
-              setForm({ ...form, title: e.target.value });
-              if (errors.title) setErrors({ ...errors, title: '' });
-            }}
-            style={{ width: '100%' }}
+            value={values.title}
+            onChange={(e) => setValue('title', e.target.value)}
           />
         </FormField>
 
-        <button type="submit" className="primary">Подать заявку</button>
+        <button type="submit" className="primary" disabled={submitting}>Подать заявку</button>
       </div>
     </form>
   );

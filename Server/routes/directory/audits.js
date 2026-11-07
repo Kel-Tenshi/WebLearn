@@ -2,6 +2,7 @@ const express = require('express');
 const requireRole = require('../../middleware/requireRole');
 const auditsDb = require('../../db/audits');
 const { AUDIT_STATUSES } = require('../../constants');
+const { getNextStatuses, canTransition } = require('../../stateMachine');
 
 const router = express.Router();
 
@@ -42,10 +43,19 @@ router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
       return res.status(400).json({ message: 'Недопустимый статус инвентаризации' });
     }
 
-    const changes = await auditsDb.updateAuditStatus(Number(req.params.id), status, notes);
-    if (!changes) {
+    const audit = await auditsDb.getAuditById(Number(req.params.id));
+    if (!audit) {
       return res.status(404).json({ message: 'Акт не найден' });
     }
+
+    if (!canTransition('audit', audit.status, status)) {
+      return res.status(409).json({
+        message: `Недопустимый переход статуса: «${audit.status}» → «${status}». ` +
+          `Доступно: ${getNextStatuses('audit', audit.status).join(', ') || 'нет'}`
+      });
+    }
+
+    await auditsDb.updateAuditStatus(Number(req.params.id), status, notes);
 
     res.json({ ok: true, status });
   } catch (err) {

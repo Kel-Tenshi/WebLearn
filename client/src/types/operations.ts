@@ -1,5 +1,10 @@
 export type MaintenanceType = 'Плановое ТО' | 'Аварийный ремонт' | 'Калибровка/Поверка' | 'Модернизация';
-export type MaintenanceStatus = 'Запланировано' | 'В процессе' | 'Завершено' | 'Отменено';
+export type MaintenanceStatus =
+  | 'Запланировано'
+  | 'Ожидает запчастей'
+  | 'В процессе'
+  | 'Завершено'
+  | 'Отменено';
 
 export interface MaintenanceLog {
   id: number;

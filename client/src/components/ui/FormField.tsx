@@ -5,11 +5,18 @@ interface FormFieldProps {
   error?: string | null;
   children: React.ReactNode;
   style?: React.CSSProperties;
+  className?: string;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({ label, error, children, style }) => {
+export const FormField: React.FC<FormFieldProps> = ({
+  label,
+  error,
+  children,
+  style,
+  className,
+}) => {
   return (
-    <div className={`field-wrapper ${error ? 'has-error' : ''}`} style={style}>
+    <div className={`field-wrapper ${error ? 'has-error' : ''} ${className || ''}`} style={style}>
       {label && <label className="field-label">{label}</label>}
       <div className="field-control">
         {children}

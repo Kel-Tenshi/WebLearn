@@ -5,10 +5,12 @@ import { User } from './types';
 import { Navbar } from './components/layout/Navbar';
 import { LoginView } from './components/auth/LoginView';
 import { RegisterView } from './components/auth/RegisterView';
+import { HomeTab } from './components/home/HomeTab';
 import { EquipmentTab } from './components/equipment/EquipmentTab';
 import { RequestsTab } from './components/requests/RequestsTab';
 import { OperationsTab } from './components/operations/OperationsTab';
 import { DirectoryTab } from './components/directory/DirectoryTab';
+import { AuditsTab } from './components/directory/AuditsTab';
 import { UsersTab } from './components/users/UsersTab';
 import { NotFoundView } from './components/layout/NotFoundView';
 
@@ -54,24 +56,26 @@ function App() {
 
   return (
     <Routes>
-      {/* Маршруты авторизации: если уже вошел — отправляем к оборудованию */}
+      {/* Маршруты авторизации: если уже вошел — отправляем на главную */}
       <Route
         path="/login"
-        element={user ? <Navigate to="/equipment" replace /> : <LoginView onSuccess={setUser} />}
+        element={user ? <Navigate to="/" replace /> : <LoginView onSuccess={setUser} />}
       />
       <Route
         path="/register"
-        element={user ? <Navigate to="/equipment" replace /> : <RegisterView onSuccess={setUser} />}
+        element={user ? <Navigate to="/" replace /> : <RegisterView onSuccess={setUser} />}
       />
 
       {/* Защищенная зона приложения */}
       {user ? (
         <Route element={<ProtectedLayout user={user} onLogout={handleLogout} />}>
-          <Route index element={<Navigate to="/equipment" replace />} />
+          <Route index element={<HomeTab user={user} />} />
           <Route path="equipment" element={<EquipmentTab user={user} />} />
           <Route path="requests" element={<RequestsTab user={user} />} />
-          <Route path="operations" element={<OperationsTab user={user} />} />
+          <Route path="operations" element={<Navigate to="/operations/maintenance" replace />} />
+          <Route path="operations/:section" element={<OperationsTab user={user} />} />
           <Route path="directory" element={<DirectoryTab user={user} />} />
+          <Route path="audits" element={<AuditsTab user={user} />} />
           {user.role === 'admin' && (
             <Route path="users" element={<UsersTab currentUser={user} />} />
           )}

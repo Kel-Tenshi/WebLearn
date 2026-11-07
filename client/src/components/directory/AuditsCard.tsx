@@ -1,41 +1,49 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { InventoryAudit, LocationItem } from '../../types';
 import { FormField } from '../ui/FormField';
+import { StatusBadge } from '../ui/StatusBadge';
+import { StatusActions } from '../ui/StatusActions';
+import { useForm } from '../../hooks/useForm';
+import { collect } from '../../utils/validation';
+import { getStatusActions } from '../../config/statusMachine';
 
 interface Props {
   items: InventoryAudit[];
   locations: LocationItem[];
   canManage: boolean;
   onCreate: (data: { locationId: number }) => Promise<void>;
-  onFinish: (id: number) => void;
+  onStatusChange: (id: number, status: string) => void;
 }
+
+interface FormState {
+  locationId: number;
+}
+
+const EMPTY_FORM: FormState = { locationId: 0 };
+
+const validateAudit = (values: FormState) =>
+  collect({
+    locationId: values.locationId ? undefined : 'Выберите локацию для инвентаризации',
+  });
 
 export const AuditsCard: React.FC<Props> = ({
   items,
   locations,
   canManage,
   onCreate,
-  onFinish,
+  onStatusChange,
 }) => {
-  const [locationId, setLocationId] = useState(0);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateAudit);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!locationId) {
-      setErrors({ locationId: 'Выберите локацию для инвентаризации' });
-      return;
-    }
-
+  const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ locationId });
-      setLocationId(0);
-      setErrors({});
+      await onCreate({ locationId: current.locationId });
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <div className="card">
@@ -44,11 +52,8 @@ export const AuditsCard: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="form-row" noValidate>
           <FormField error={errors.locationId}>
             <select
-              value={locationId}
-              onChange={(e) => {
-                setLocationId(Number(e.target.value));
-                if (errors.locationId) setErrors({});
-              }}
+              value={values.locationId}
+              onChange={(e) => setValue('locationId', Number(e.target.value))}
             >
               <option value={0} disabled>Выберите локацию</option>
               {locations.map((location) => (
@@ -56,7 +61,7 @@ export const AuditsCard: React.FC<Props> = ({
               ))}
             </select>
           </FormField>
-          <button type="submit" className="primary">Начать ревизию</button>
+          <button type="submit" className="primary" disabled={submitting}>Начать ревизию</button>
         </form>
       )}
       <table className="data-table">
@@ -71,20 +76,29 @@ export const AuditsCard: React.FC<Props> = ({
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.auditDate}</td>
-              <td>{item.locationName}</td>
-              <td>{item.auditor}</td>
-              <td><span className="badge">{item.status}</span></td>
-              <td>
-                {canManage && item.status === 'В процессе' && (
-                  <button onClick={() => onFinish(item.id)}>Завершить</button>
-                )}
-              </td>
+          {items.length === 0 ? (
+            <tr>
+              <td colSpan={6} align="center">Актов инвентаризации пока нет</td>
             </tr>
-          ))}
+          ) : (
+            items.map((item) => (
+              <tr key={item.id}>
+                <td>{item.id}</td>
+                <td>{item.auditDate}</td>
+                <td>{item.locationName}</td>
+                <td>{item.auditor}</td>
+                <td><StatusBadge status={item.status} /></td>
+                <td>
+                  {canManage ? (
+                    <StatusActions
+                      actions={getStatusActions('audit', item.status)}
+                      onChange={(status) => onStatusChange(item.id, status)}
+                    />
+                  ) : '—'}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

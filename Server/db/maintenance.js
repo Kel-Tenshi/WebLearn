@@ -15,6 +15,15 @@ module.exports = {
     }
   },
 
+  getMaintenanceById: async (id) => {
+    try {
+      return await getDb().get('SELECT * FROM maintenance_logs WHERE id = ?', id);
+    } catch (error) {
+      console.error('db/maintenance getMaintenanceById:', error);
+      throw error;
+    }
+  },
+
   getMaintenanceByEquipment: async (equipmentId) => {
     try {
       return await getDb().all(`
@@ -53,10 +62,8 @@ module.exports = {
         description || null
       );
 
-      // Если начат ремонт — автоматически меняем статус оборудования на "В ремонте"
-      if (status === 'В процессе') {
-        await getDb().run('UPDATE equipment SET status = "В ремонте" WHERE id = ?', equipmentId);
-      }
+      // Запись создаётся в статусе «Запланировано», статус оборудования не меняется.
+      // Перевод в «В процессе» выполняется отдельным действием.
 
       return {
         id: res.lastID,
@@ -88,9 +95,21 @@ module.exports = {
         id
       );
 
-      // Если ТО успешно завершено — возвращаем оборудование в статус "Работает"
-      if (status === 'Завершено') {
-        await getDb().run('UPDATE equipment SET status = "Работает" WHERE id = ?', log.equipmentId);
+      const equipment = await getDb().get(
+        'SELECT status FROM equipment WHERE id = ?',
+        log.equipmentId
+      );
+
+      if (equipment) {
+        // Ремонт начался — оборудование уходит в ремонт.
+        if (status === 'В процессе' && equipment.status !== 'Списано') {
+          await getDb().run('UPDATE equipment SET status = "В ремонте" WHERE id = ?', log.equipmentId);
+        }
+
+        // ТО завершено или отменено — возвращаем оборудование в работу.
+        if (['Завершено', 'Отменено'].includes(status) && equipment.status === 'В ремонте') {
+          await getDb().run('UPDATE equipment SET status = "Работает" WHERE id = ?', log.equipmentId);
+        }
       }
 
       return res.changes;

@@ -80,9 +80,9 @@ async function seedDemoData(db) {
   if (reqCount.count === 0) {
     await db.run(`
       INSERT INTO requests (type, title, applicant, equipmentId, priority, status, createdAt) VALUES
-      ('Перемещение', 'Перенести осциллограф в Цех механической обработки', 'Петров А.С.', 2, 'Средний', 'На согласовании', datetime('now', 'localtime')),
-      ('Ремонт', 'Диагностика блока питания микроскопа', 'user', 4, 'Высокий', 'Одобрено', datetime('now', 'localtime')),
-      ('Закупка', 'Заказ набора фрез для ЧПУ', 'manager', 3, 'Низкий', 'На согласовании', datetime('now', 'localtime'))
+      ('Перемещение', 'Перенести осциллограф в Цех механической обработки', 'user', 2, 'Средний', 'На согласовании', datetime('now', 'localtime')),
+      ('Ремонт', 'Диагностика блока питания микроскопа', 'user', 4, 'Высокий', 'В работе', datetime('now', 'localtime')),
+      ('Закупка', 'Заказ набора фрез для ЧПУ', 'manager', 3, 'Низкий', 'Одобрено', datetime('now', 'localtime'))
     `);
   }
 
@@ -92,7 +92,8 @@ async function seedDemoData(db) {
     await db.run(`
       INSERT INTO maintenance_logs (equipmentId, maintenanceType, performer, cost, startDate, endDate, status, description) VALUES
       (1, 'Плановое ТО', 'Инженер Соколов Д.В.', 15000, '2024-03-01', '2024-03-02', 'Завершено', 'Замена смазки, проверка биения шпинделя'),
-      (2, 'Аварийный ремонт', 'АО ЛабСервис', 28000, '2024-04-05', NULL, 'В процессе', 'Ремонт входного тракта усилителя')
+      (2, 'Аварийный ремонт', 'АО ЛабСервис', 28000, '2024-04-05', NULL, 'В процессе', 'Ремонт входного тракта усилителя'),
+      (3, 'Плановое ТО', 'Инженер Соколов Д.В.', 12000, '2024-04-15', NULL, 'Ожидает запчастей', 'Ожидается поставка комплекта подшипников')
     `);
   }
 
@@ -102,7 +103,8 @@ async function seedDemoData(db) {
     await db.run(`
       INSERT INTO transfers (equipmentId, fromLocationId, toLocationId, transferredBy, transferDate, reason, status) VALUES
       (1, 1, 2, 'admin', '2023-01-20', 'Ввод в эксплуатацию', 'Принято'),
-      (4, 1, 3, 'manager', '2024-02-05', 'Передача в лабораторию', 'Принято')
+      (4, 1, 3, 'manager', '2024-02-05', 'Передача в лабораторию', 'Принято'),
+      (3, 2, 1, 'manager', '2024-04-18', 'Перевод на центральный склад', 'В пути')
     `);
   }
 
@@ -112,7 +114,8 @@ async function seedDemoData(db) {
     await db.run(`
       INSERT INTO orders (orderNumber, supplierId, title, totalAmount, status, orderDate, createdBy) VALUES
       ('ORD-2024-001', 1, 'Поставка оснастки для токарного станка', 94000, 'В доставке', '2024-04-01', 'manager'),
-      ('ORD-2024-002', 2, 'Калибровочные эталоны для лаборатории', 45000, 'Согласован', '2024-04-10', 'admin')
+      ('ORD-2024-002', 2, 'Калибровочные эталоны для лаборатории', 45000, 'Согласован', '2024-04-10', 'admin'),
+      ('ORD-2024-003', 1, 'Комплект расходных материалов', 18000, 'Черновик', '2024-04-20', 'manager')
     `);
   }
 

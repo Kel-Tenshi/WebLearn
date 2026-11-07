@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Equipment, MaintenanceLog, MaintenanceType } from '../../types';
 import { FormField } from '../ui/FormField';
+import { StatusBadge } from '../ui/StatusBadge';
+import { StatusActions } from '../ui/StatusActions';
+import { useForm } from '../../hooks/useForm';
+import { collect, maxTextLength, nonNegativeNumber } from '../../utils/validation';
+import { getStatusActions } from '../../config/statusMachine';
 
 interface Props {
   items: MaintenanceLog[];
   equipment: Equipment[];
   canManage: boolean;
   onCreate: (data: Partial<MaintenanceLog>) => Promise<void>;
-  onFinish: (id: number) => void;
+  onStatusChange: (id: number, status: string) => void;
 }
 
 interface FormState {
@@ -24,47 +29,31 @@ const EMPTY_FORM: FormState = {
   description: '',
 };
 
+const validateMaintenance = (values: FormState) =>
+  collect({
+    equipmentId: values.equipmentId ? undefined : 'Выберите оборудование',
+    cost: nonNegativeNumber(values.cost, 'Стоимость не может быть отрицательной'),
+    description: maxTextLength(values.description, 300, 'Описание не должно превышать 300 символов'),
+  });
+
 export const MaintenanceSection: React.FC<Props> = ({
   items,
   equipment,
   canManage,
   onCreate,
-  onFinish,
+  onStatusChange,
 }) => {
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateMaintenance);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-
-    if (!form.equipmentId) {
-      errs.equipmentId = 'Выберите оборудование';
-    }
-
-    if (form.cost < 0) {
-      errs.cost = 'Стоимость не может быть отрицательной';
-    }
-
-    if (form.description.length > 300) {
-      errs.description = 'Описание не должно превышать 300 символов';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ ...form, status: 'В процессе' });
-      setForm({ ...EMPTY_FORM });
-      setErrors({});
+      await onCreate({ ...current });
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <>
@@ -74,11 +63,8 @@ export const MaintenanceSection: React.FC<Props> = ({
           <div className="form-row">
             <FormField error={errors.equipmentId}>
               <select
-                value={form.equipmentId}
-                onChange={(e) => {
-                  setForm({ ...form, equipmentId: Number(e.target.value) });
-                  if (errors.equipmentId) setErrors({ ...errors, equipmentId: '' });
-                }}
+                value={values.equipmentId}
+                onChange={(e) => setValue('equipmentId', Number(e.target.value))}
               >
                 <option value={0} disabled>Выберите оборудование</option>
                 {equipment.map((item) => (
@@ -90,8 +76,8 @@ export const MaintenanceSection: React.FC<Props> = ({
             </FormField>
 
             <select
-              value={form.maintenanceType}
-              onChange={(e) => setForm({ ...form, maintenanceType: e.target.value as MaintenanceType })}
+              value={values.maintenanceType}
+              onChange={(e) => setValue('maintenanceType', e.target.value as MaintenanceType)}
             >
               {['Плановое ТО', 'Аварийный ремонт', 'Калибровка/Поверка', 'Модернизация'].map((type) => (
                 <option key={type}>{type}</option>
@@ -102,26 +88,20 @@ export const MaintenanceSection: React.FC<Props> = ({
               <input
                 type="number"
                 placeholder="Стоимость, ₽"
-                value={form.cost}
-                onChange={(e) => {
-                  setForm({ ...form, cost: Number(e.target.value) });
-                  if (errors.cost) setErrors({ ...errors, cost: '' });
-                }}
+                value={values.cost}
+                onChange={(e) => setValue('cost', Number(e.target.value))}
               />
             </FormField>
 
             <FormField error={errors.description}>
               <input
                 placeholder="Описание работ"
-                value={form.description}
-                onChange={(e) => {
-                  setForm({ ...form, description: e.target.value });
-                  if (errors.description) setErrors({ ...errors, description: '' });
-                }}
+                value={values.description}
+                onChange={(e) => setValue('description', e.target.value)}
               />
             </FormField>
 
-            <button type="submit" className="primary">Назначить</button>
+            <button type="submit" className="primary" disabled={submitting}>Назначить</button>
           </div>
         </form>
       )}
@@ -140,24 +120,31 @@ export const MaintenanceSection: React.FC<Props> = ({
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.invNumber} ({item.equipmentName})</td>
-              <td>{item.maintenanceType}</td>
-              <td>{item.performer}</td>
-              <td>{item.cost.toLocaleString()} ₽</td>
-              <td>{item.startDate}</td>
-              <td><span className="badge">{item.status}</span></td>
-              {canManage && (
-                <td>
-                  {item.status !== 'Завершено' ? (
-                    <button onClick={() => onFinish(item.id)}>Завершить</button>
-                  ) : '—'}
-                </td>
-              )}
+          {items.length === 0 ? (
+            <tr>
+              <td colSpan={canManage ? 8 : 7} align="center">Записей ТО пока нет</td>
             </tr>
-          ))}
+          ) : (
+            items.map((item) => (
+              <tr key={item.id}>
+                <td>{item.id}</td>
+                <td>{item.invNumber} ({item.equipmentName})</td>
+                <td>{item.maintenanceType}</td>
+                <td>{item.performer}</td>
+                <td>{item.cost.toLocaleString()} ₽</td>
+                <td>{item.startDate}</td>
+                <td><StatusBadge status={item.status} /></td>
+                {canManage && (
+                  <td>
+                    <StatusActions
+                      actions={getStatusActions('maintenance', item.status)}
+                      onChange={(status) => onStatusChange(item.id, status)}
+                    />
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </>

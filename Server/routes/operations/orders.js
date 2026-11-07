@@ -2,6 +2,7 @@ const express = require('express');
 const requireRole = require('../../middleware/requireRole');
 const ordersDb = require('../../db/orders');
 const { ORDER_STATUSES } = require('../../constants');
+const { getNextStatuses, canTransition } = require('../../stateMachine');
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', requireRole('manager', 'admin'), async (req, res) => {
   try {
-    const { orderNumber, supplierId, title, totalAmount, status } = req.body || {};
+    const { orderNumber, supplierId, title, totalAmount } = req.body || {};
 
     if (!orderNumber || !title) {
       return res.status(400).json({ message: 'Укажите номер заказа и назначение' });
@@ -27,7 +28,7 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
       supplierId: supplierId ? Number(supplierId) : null,
       title: String(title).trim(),
       totalAmount: Number(totalAmount) || 0,
-      status: status || 'Черновик',
+      status: 'Черновик',
       createdBy: req.userLogin
     });
 
@@ -45,10 +46,19 @@ router.patch('/:id/status', requireRole('manager', 'admin'), async (req, res) =>
       return res.status(400).json({ message: 'Недопустимый статус заказа' });
     }
 
-    const changes = await ordersDb.updateOrderStatus(Number(req.params.id), status);
-    if (!changes) {
+    const order = await ordersDb.getOrderById(Number(req.params.id));
+    if (!order) {
       return res.status(404).json({ message: 'Заказ не найден' });
     }
+
+    if (!canTransition('order', order.status, status)) {
+      return res.status(409).json({
+        message: `Недопустимый переход статуса: «${order.status}» → «${status}». ` +
+          `Доступно: ${getNextStatuses('order', order.status).join(', ') || 'нет'}`
+      });
+    }
+
+    await ordersDb.updateOrderStatus(Number(req.params.id), status);
 
     res.json({ ok: true, status });
   } catch (err) {

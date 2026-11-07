@@ -8,6 +8,8 @@ import './styles/forms.css';
 import './styles/toasts.css';
 import './styles/not-found.css';
 import './styles/users.css';
+import './styles/ui.css';
+import './styles/home.css';
 import App from './App';
 import { AlertProvider } from './context/AlertContext';
 import reportWebVitals from './reportWebVitals';

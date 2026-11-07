@@ -7,37 +7,51 @@ interface Props {
   onLogout: () => void;
 }
 
+const ROLE_LABELS: Record<User['role'], string> = {
+  employee: 'сотрудник',
+  manager: 'руководитель',
+  admin: 'администратор',
+};
+
 export const Navbar: React.FC<Props> = ({ user, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const tabs = [
-    { path: '/equipment', label: 'Оборудование' },
-    { path: '/requests', label: 'Заявки' },
-    { path: '/operations', label: 'Операции (ТО, Перемещения, Снабжение)' },
-    { path: '/directory', label: 'Справочники и Аудит' },
+    { path: '/', label: 'Главная', active: location.pathname === '/' },
+    { path: '/equipment', label: 'Оборудование', active: location.pathname === '/equipment' },
+    { path: '/requests', label: 'Заявки', active: location.pathname === '/requests' },
+    {
+      path: '/operations',
+      label: 'Операции',
+      active: location.pathname.startsWith('/operations'),
+    },
+    { path: '/directory', label: 'Справочники', active: location.pathname === '/directory' },
+    { path: '/audits', label: 'Инвентаризация', active: location.pathname === '/audits' },
   ];
 
   if (user.role === 'admin') {
-    tabs.push({ path: '/users', label: 'Пользователи' });
+    tabs.push({ path: '/users', label: 'Пользователи', active: location.pathname === '/users' });
   }
 
   return (
     <header className="topbar">
-      <div className="brand">АСУ Оборудование</div>
+      <button className="brand" onClick={() => navigate('/')} title="На главную">
+        АСУ Оборудование
+      </button>
       <nav className="tabs">
-        {tabs.map((t) => (
+        {tabs.map((tab) => (
           <button
-            key={t.path}
-            className={location.pathname === t.path ? 'active' : ''}
-            onClick={() => navigate(t.path)}
+            key={tab.path}
+            className={tab.active ? 'active' : ''}
+            onClick={() => navigate(tab.path)}
           >
-            {t.label}
+            {tab.label}
           </button>
         ))}
       </nav>
       <div className="profile">
-        <span>{user.login} (<strong>{user.role}</strong>)</span>
+        <span>{user.login} (<strong>{ROLE_LABELS[user.role]}</strong>)</span>
         <button onClick={onLogout}>Выйти</button>
       </div>
     </header>

@@ -4,10 +4,11 @@ import { useEquipment } from '../../hooks/useEquipment';
 import { useAlert } from '../../context/AlertContext';
 import { EquipmentForm } from './EquipmentForm';
 import { EquipmentTable } from './EquipmentTable';
+import { Loading } from '../ui/Loading';
 
 export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
-  const { list, categories, locations, reload, create, update, remove } = useEquipment();
+  const { list, categories, locations, loading, reload, create, update, remove } = useEquipment();
 
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<Equipment | null>(null);
@@ -48,6 +49,15 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
       .toLowerCase()
       .includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="tab-container">
+        <h2>Оборудование</h2>
+        <Loading label="Загрузка реестра оборудования…" />
+      </div>
+    );
+  }
 
   return (
     <div className="tab-container">

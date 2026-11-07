@@ -21,6 +21,13 @@ export const NotFoundView: React.FC<Props> = ({ user }) => {
   // Список всех разделов системы с разграничением по ролям
   const allPages: PageSuggestion[] = [
     {
+      path: '/',
+      title: 'Главная',
+      description: 'Сводка по заявкам и задачам, требующим внимания',
+      roles: ['employee', 'manager', 'admin'],
+      badge: 'Сводка'
+    },
+    {
       path: '/equipment',
       title: 'Оборудование',
       description: 'Карточки единиц оборудования, инвентарные номера, поиск, статусы и учет',
@@ -35,18 +42,25 @@ export const NotFoundView: React.FC<Props> = ({ user }) => {
       badge: 'Документооборот'
     },
     {
-      path: '/operations',
-      title: 'Операции (ТО, Перемещения, Снабжение)',
-      description: 'Журнал технического обслуживания, история перемещений и заказы поставщикам',
+      path: '/operations/maintenance',
+      title: 'Операции',
+      description: 'Журнал ТО, история перемещений и заказы поставщикам',
       roles: ['employee', 'manager', 'admin'],
       badge: 'Управление'
     },
     {
       path: '/directory',
-      title: 'Справочники и Аудит',
-      description: 'Подразделения компании, склады, категории техники, поставщики и акты ревизии',
+      title: 'Справочники',
+      description: 'Подразделения, локации, категории техники и поставщики',
       roles: ['employee', 'manager', 'admin'],
       badge: 'Справочники'
+    },
+    {
+      path: '/audits',
+      title: 'Инвентаризация',
+      description: 'Акты ревизий по локациям и их статусы',
+      roles: ['employee', 'manager', 'admin'],
+      badge: 'Аудит'
     },
     {
       path: '/users',
@@ -96,8 +110,8 @@ export const NotFoundView: React.FC<Props> = ({ user }) => {
         </div>
 
         <div className="not-found-actions">
-          <button className="primary" onClick={() => navigate('/equipment')}>
-            На главную (Оборудование)
+          <button className="primary" onClick={() => navigate('/')}>
+            На главную
           </button>
           <button onClick={() => navigate(-1)}>
             Вернуться назад

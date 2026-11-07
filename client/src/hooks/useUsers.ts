@@ -9,6 +9,7 @@ export function useUsers() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     try {
       const list = await userApi.getUsers();
       setUsers(list);

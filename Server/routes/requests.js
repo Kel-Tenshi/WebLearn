@@ -1,12 +1,13 @@
 const express = require('express');
 const {
   getRequestsWithEquipment,
+  getRequestById,
   addRequest,
   updateRequestStatus
 } = require('../db/requests');
 const authMiddleware = require('../middleware/auth');
-const requireRole = require('../middleware/requireRole');
 const { REQUEST_TYPES, REQUEST_PRIORITIES, REQUEST_STATUSES } = require('../constants');
+const { getNextStatuses, canTransition } = require('../stateMachine');
 
 const requestsRouter = express.Router();
 requestsRouter.use(authMiddleware);
@@ -58,14 +59,34 @@ requestsRouter.post('/', async (req, res) => {
   }
 });
 
-// Смена статуса заявки
-requestsRouter.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
+// Смена статуса заявки.
+// Сотрудник может только отменить свою заявку, руководитель проходит по графу.
+requestsRouter.patch('/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { status } = req.body || {};
 
     if (!REQUEST_STATUSES.includes(status)) {
       return res.status(400).json({ message: 'Недопустимый статус заявки' });
+    }
+
+    const request = await getRequestById(id);
+    if (!request) return res.status(404).json({ message: 'Заявка не найдена' });
+
+    if (req.userRole === 'employee') {
+      if (request.applicant !== req.userLogin) {
+        return res.status(403).json({ message: 'Можно изменять только свои заявки' });
+      }
+      if (status !== 'Отменено') {
+        return res.status(403).json({ message: 'Сотрудник может только отменить свою заявку' });
+      }
+    }
+
+    if (!canTransition('request', request.status, status)) {
+      return res.status(409).json({
+        message: `Недопустимый переход статуса: «${request.status}» → «${status}». ` +
+          `Доступно: ${getNextStatuses('request', request.status).join(', ') || 'нет'}`
+      });
     }
 
     const changes = await updateRequestStatus(id, status);

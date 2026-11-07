@@ -1,5 +1,6 @@
 import React from 'react';
 import { Equipment } from '../../types';
+import { StatusBadge } from '../ui/StatusBadge';
 
 interface Props {
   items: Equipment[];
@@ -37,7 +38,7 @@ export const EquipmentTable: React.FC<Props> = ({ items, canManage, onEdit, onDe
               <td>{item.categoryName || '—'}</td>
               <td>{item.locationName || '—'}</td>
               <td>{item.purchaseCost ? `${item.purchaseCost.toLocaleString()} ₽` : '—'}</td>
-              <td><span className={`badge status-${item.status}`}>{item.status}</span></td>
+              <td><StatusBadge status={item.status} /></td>
               {canManage && (
                 <td>
                   <button onClick={() => onEdit(item)}>Изм.</button>

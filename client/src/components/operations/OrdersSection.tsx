@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
-import { OrderStatus, PurchaseOrder, Supplier } from '../../types';
+import React from 'react';
+import { PurchaseOrder, Supplier } from '../../types';
 import { FormField } from '../ui/FormField';
+import { StatusBadge } from '../ui/StatusBadge';
+import { StatusActions } from '../ui/StatusActions';
+import { useForm } from '../../hooks/useForm';
+import {
+  collect,
+  maxTextLength,
+  minTextLength,
+  nonNegativeNumber,
+  requiredText,
+} from '../../utils/validation';
+import { getStatusActions } from '../../config/statusMachine';
 
 interface Props {
   items: PurchaseOrder[];
   suppliers: Supplier[];
   canManage: boolean;
   onCreate: (data: Partial<PurchaseOrder>) => Promise<void>;
-  onStatusChange: (id: number, status: OrderStatus) => void;
+  onStatusChange: (id: number, status: string) => void;
 }
 
 interface FormState {
@@ -24,7 +35,18 @@ const EMPTY_FORM: FormState = {
   totalAmount: 0,
 };
 
-const ORDER_STATUSES: OrderStatus[] = ['Черновик', 'Согласован', 'В доставке', 'Получен', 'Отменён'];
+const validateOrder = (values: FormState) =>
+  collect({
+    orderNumber:
+      requiredText(values.orderNumber, 'Укажите номер заказа') ||
+      minTextLength(values.orderNumber, 3, 'Номер заказа должен содержать минимум 3 символа') ||
+      maxTextLength(values.orderNumber, 30, 'Номер заказа не должен превышать 30 символов'),
+    title:
+      requiredText(values.title, 'Укажите назначение заказа') ||
+      minTextLength(values.title, 3, 'Назначение должно содержать минимум 3 символа') ||
+      maxTextLength(values.title, 200, 'Назначение не должно превышать 200 символов'),
+    totalAmount: nonNegativeNumber(values.totalAmount, 'Сумма не может быть отрицательной'),
+  });
 
 export const OrdersSection: React.FC<Props> = ({
   items,
@@ -33,56 +55,22 @@ export const OrdersSection: React.FC<Props> = ({
   onCreate,
   onStatusChange,
 }) => {
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateOrder);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    const orderNumber = form.orderNumber.trim();
-    const title = form.title.trim();
-
-    if (!orderNumber) {
-      errs.orderNumber = 'Укажите номер заказа';
-    } else if (orderNumber.length < 3) {
-      errs.orderNumber = 'Номер заказа должен содержать минимум 3 символа';
-    } else if (orderNumber.length > 30) {
-      errs.orderNumber = 'Номер заказа не должен превышать 30 символов';
-    }
-
-    if (!title) {
-      errs.title = 'Укажите назначение заказа';
-    } else if (title.length < 3) {
-      errs.title = 'Назначение должно содержать минимум 3 символа';
-    } else if (title.length > 200) {
-      errs.title = 'Назначение не должно превышать 200 символов';
-    }
-
-    if (form.totalAmount < 0) {
-      errs.totalAmount = 'Сумма не может быть отрицательной';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
       await onCreate({
-        ...form,
-        orderNumber: form.orderNumber.trim(),
-        title: form.title.trim(),
-        supplierId: form.supplierId || null,
-        status: 'Согласован',
+        ...current,
+        orderNumber: current.orderNumber.trim(),
+        title: current.title.trim(),
+        supplierId: current.supplierId || null,
       });
-      setForm({ ...EMPTY_FORM });
-      setErrors({});
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <>
@@ -93,17 +81,14 @@ export const OrdersSection: React.FC<Props> = ({
             <FormField error={errors.orderNumber}>
               <input
                 placeholder="Номер заказа"
-                value={form.orderNumber}
-                onChange={(e) => {
-                  setForm({ ...form, orderNumber: e.target.value });
-                  if (errors.orderNumber) setErrors({ ...errors, orderNumber: '' });
-                }}
+                value={values.orderNumber}
+                onChange={(e) => setValue('orderNumber', e.target.value)}
               />
             </FormField>
 
             <select
-              value={form.supplierId}
-              onChange={(e) => setForm({ ...form, supplierId: Number(e.target.value) })}
+              value={values.supplierId}
+              onChange={(e) => setValue('supplierId', Number(e.target.value))}
             >
               <option value={0}>Без поставщика</option>
               {suppliers.map((supplier) => (
@@ -114,11 +99,8 @@ export const OrdersSection: React.FC<Props> = ({
             <FormField error={errors.title}>
               <input
                 placeholder="Наименование"
-                value={form.title}
-                onChange={(e) => {
-                  setForm({ ...form, title: e.target.value });
-                  if (errors.title) setErrors({ ...errors, title: '' });
-                }}
+                value={values.title}
+                onChange={(e) => setValue('title', e.target.value)}
               />
             </FormField>
 
@@ -126,15 +108,12 @@ export const OrdersSection: React.FC<Props> = ({
               <input
                 type="number"
                 placeholder="Сумма, ₽"
-                value={form.totalAmount}
-                onChange={(e) => {
-                  setForm({ ...form, totalAmount: Number(e.target.value) });
-                  if (errors.totalAmount) setErrors({ ...errors, totalAmount: '' });
-                }}
+                value={values.totalAmount}
+                onChange={(e) => setValue('totalAmount', Number(e.target.value))}
               />
             </FormField>
 
-            <button type="submit" className="primary">Создать заказ</button>
+            <button type="submit" className="primary" disabled={submitting}>Создать заказ</button>
           </div>
         </form>
       )}
@@ -148,30 +127,34 @@ export const OrdersSection: React.FC<Props> = ({
             <th>Наименование</th>
             <th>Сумма</th>
             <th>Статус</th>
+            {canManage && <th>Действия</th>}
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td><code>{item.orderNumber}</code></td>
-              <td>{item.orderDate}</td>
-              <td>{item.supplierName || '—'}</td>
-              <td><b>{item.title}</b></td>
-              <td>{item.totalAmount.toLocaleString()} ₽</td>
-              <td>
-                {canManage ? (
-                  <select
-                    value={item.status}
-                    onChange={(e) => onStatusChange(item.id, e.target.value as OrderStatus)}
-                  >
-                    {ORDER_STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                ) : <span className="badge">{item.status}</span>}
-              </td>
+          {items.length === 0 ? (
+            <tr>
+              <td colSpan={canManage ? 7 : 6} align="center">Заказов пока нет</td>
             </tr>
-          ))}
+          ) : (
+            items.map((item) => (
+              <tr key={item.id}>
+                <td><code>{item.orderNumber}</code></td>
+                <td>{item.orderDate}</td>
+                <td>{item.supplierName || '—'}</td>
+                <td><b>{item.title}</b></td>
+                <td>{item.totalAmount.toLocaleString()} ₽</td>
+                <td><StatusBadge status={item.status} /></td>
+                {canManage && (
+                  <td>
+                    <StatusActions
+                      actions={getStatusActions('order', item.status)}
+                      onChange={(status) => onStatusChange(item.id, status)}
+                    />
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </>

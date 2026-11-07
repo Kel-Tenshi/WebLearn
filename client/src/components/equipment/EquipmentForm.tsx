@@ -1,6 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Category, Equipment, EquipmentStatus, LocationItem } from '../../types';
 import { FormField } from '../ui/FormField';
+import { useForm } from '../../hooks/useForm';
+import {
+  collect,
+  maxTextLength,
+  minTextLength,
+  nonNegativeNumber,
+  requiredText,
+} from '../../utils/validation';
+import {
+  EQUIPMENT_INITIAL_STATUSES,
+  getNextStatuses,
+} from '../../config/statusMachine';
 
 interface Props {
   categories: Category[];
@@ -30,6 +42,20 @@ const EMPTY_FORM: FormState = {
   status: 'Работает',
 };
 
+const validateEquipment = (values: FormState) =>
+  collect({
+    invNumber:
+      requiredText(values.invNumber, 'Укажите инвентарный номер') ||
+      minTextLength(values.invNumber, 3, 'Минимум 3 символа') ||
+      maxTextLength(values.invNumber, 30, 'Максимум 30 символов'),
+    name:
+      requiredText(values.name, 'Укажите наименование техники') ||
+      minTextLength(values.name, 2, 'Минимум 2 символа') ||
+      maxTextLength(values.name, 120, 'Максимум 120 символов'),
+    serialNumber: maxTextLength(values.serialNumber, 60, 'Максимум 60 символов'),
+    purchaseCost: nonNegativeNumber(values.purchaseCost, 'Стоимость не может быть меньше 0'),
+  });
+
 export const EquipmentForm: React.FC<Props> = ({
   categories,
   locations,
@@ -37,14 +63,19 @@ export const EquipmentForm: React.FC<Props> = ({
   onSubmit,
   onCancel,
 }) => {
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const {
+    values,
+    errors,
+    submitting,
+    setValue,
+    replace,
+    reset,
+    submit,
+  } = useForm<FormState>(EMPTY_FORM, validateEquipment);
 
   useEffect(() => {
-    setErrors({});
-
     if (editingItem) {
-      setForm({
+      replace({
         invNumber: editingItem.invNumber,
         serialNumber: editingItem.serialNumber || '',
         name: editingItem.name,
@@ -54,65 +85,32 @@ export const EquipmentForm: React.FC<Props> = ({
         status: editingItem.status,
       });
     } else {
-      setForm({ ...EMPTY_FORM });
+      reset();
     }
-  }, [editingItem]);
+  }, [editingItem, replace, reset]);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    const invNumber = form.invNumber.trim();
-    const name = form.name.trim();
+  const statusOptions = editingItem
+    ? Array.from(new Set([editingItem.status, ...getNextStatuses('equipment', editingItem.status)]))
+    : EQUIPMENT_INITIAL_STATUSES;
 
-    if (!invNumber) {
-      errs.invNumber = 'Укажите инвентарный номер';
-    } else if (invNumber.length < 3) {
-      errs.invNumber = 'Минимум 3 символа';
-    } else if (invNumber.length > 30) {
-      errs.invNumber = 'Максимум 30 символов';
-    }
-
-    if (!name) {
-      errs.name = 'Укажите наименование техники';
-    } else if (name.length < 2) {
-      errs.name = 'Минимум 2 символа';
-    } else if (name.length > 120) {
-      errs.name = 'Максимум 120 символов';
-    }
-
-    if (form.serialNumber.trim().length > 60) {
-      errs.serialNumber = 'Максимум 60 символов';
-    }
-
-    if (!Number.isFinite(form.purchaseCost) || form.purchaseCost < 0) {
-      errs.purchaseCost = 'Стоимость не может быть меньше 0';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = submit(async (current) => {
     const payload: Partial<Equipment> = {
-      ...form,
-      invNumber: form.invNumber.trim(),
-      serialNumber: form.serialNumber.trim(),
-      name: form.name.trim(),
-      categoryId: form.categoryId ? Number(form.categoryId) : null,
-      locationId: form.locationId ? Number(form.locationId) : null,
-      purchaseCost: Number(form.purchaseCost),
+      ...current,
+      invNumber: current.invNumber.trim(),
+      serialNumber: current.serialNumber.trim(),
+      name: current.name.trim(),
+      categoryId: current.categoryId ? Number(current.categoryId) : null,
+      locationId: current.locationId ? Number(current.locationId) : null,
+      purchaseCost: Number(current.purchaseCost),
     };
 
     try {
       await onSubmit(payload);
-      setErrors({});
-      if (!editingItem) setForm({ ...EMPTY_FORM });
+      if (!editingItem) reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <form onSubmit={handleSubmit} className="form-card" noValidate>
@@ -121,39 +119,30 @@ export const EquipmentForm: React.FC<Props> = ({
         <FormField error={errors.invNumber}>
           <input
             placeholder="Инв. номер *"
-            value={form.invNumber}
-            onChange={(e) => {
-              setForm({ ...form, invNumber: e.target.value });
-              if (errors.invNumber) setErrors({ ...errors, invNumber: '' });
-            }}
+            value={values.invNumber}
+            onChange={(e) => setValue('invNumber', e.target.value)}
           />
         </FormField>
 
         <FormField error={errors.serialNumber}>
           <input
             placeholder="Серийный номер"
-            value={form.serialNumber}
-            onChange={(e) => {
-              setForm({ ...form, serialNumber: e.target.value });
-              if (errors.serialNumber) setErrors({ ...errors, serialNumber: '' });
-            }}
+            value={values.serialNumber}
+            onChange={(e) => setValue('serialNumber', e.target.value)}
           />
         </FormField>
 
         <FormField error={errors.name}>
           <input
             placeholder="Наименование *"
-            value={form.name}
-            onChange={(e) => {
-              setForm({ ...form, name: e.target.value });
-              if (errors.name) setErrors({ ...errors, name: '' });
-            }}
+            value={values.name}
+            onChange={(e) => setValue('name', e.target.value)}
           />
         </FormField>
 
         <select
-          value={form.categoryId}
-          onChange={(e) => setForm({ ...form, categoryId: Number(e.target.value) })}
+          value={values.categoryId}
+          onChange={(e) => setValue('categoryId', Number(e.target.value))}
         >
           <option value={0}>Без категории</option>
           {categories.map((c) => (
@@ -162,8 +151,8 @@ export const EquipmentForm: React.FC<Props> = ({
         </select>
 
         <select
-          value={form.locationId}
-          onChange={(e) => setForm({ ...form, locationId: Number(e.target.value) })}
+          value={values.locationId}
+          onChange={(e) => setValue('locationId', Number(e.target.value))}
         >
           <option value={0}>Без локации</option>
           {locations.map((l) => (
@@ -172,11 +161,11 @@ export const EquipmentForm: React.FC<Props> = ({
         </select>
 
         <select
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value as EquipmentStatus })}
+          value={values.status}
+          onChange={(e) => setValue('status', e.target.value as EquipmentStatus)}
         >
-          {['Работает', 'В ремонте', 'Простой', 'Списано', 'На консервации'].map((s) => (
-            <option key={s} value={s}>{s}</option>
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>{status}</option>
           ))}
         </select>
 
@@ -184,15 +173,12 @@ export const EquipmentForm: React.FC<Props> = ({
           <input
             type="number"
             placeholder="Стоимость"
-            value={form.purchaseCost}
-            onChange={(e) => {
-              setForm({ ...form, purchaseCost: Number(e.target.value) });
-              if (errors.purchaseCost) setErrors({ ...errors, purchaseCost: '' });
-            }}
+            value={values.purchaseCost}
+            onChange={(e) => setValue('purchaseCost', Number(e.target.value))}
           />
         </FormField>
 
-        <button type="submit" className="primary">
+        <button type="submit" className="primary" disabled={submitting}>
           {editingItem ? 'Сохранить' : 'Добавить'}
         </button>
         {editingItem && (

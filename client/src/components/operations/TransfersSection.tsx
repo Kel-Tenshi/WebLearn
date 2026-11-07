@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Equipment, LocationItem, Transfer } from '../../types';
 import { FormField } from '../ui/FormField';
+import { StatusBadge } from '../ui/StatusBadge';
+import { StatusActions } from '../ui/StatusActions';
+import { useForm } from '../../hooks/useForm';
+import { collect, maxTextLength } from '../../utils/validation';
+import { getStatusActions } from '../../config/statusMachine';
 
 interface Props {
   items: Transfer[];
@@ -8,6 +13,7 @@ interface Props {
   locations: LocationItem[];
   canManage: boolean;
   onCreate: (data: { equipmentId: number; toLocationId: number; reason?: string }) => Promise<void>;
+  onStatusChange: (id: number, status: string) => void;
 }
 
 interface FormState {
@@ -22,47 +28,32 @@ const EMPTY_FORM: FormState = {
   reason: '',
 };
 
+const validateTransfer = (values: FormState) =>
+  collect({
+    equipmentId: values.equipmentId ? undefined : 'Выберите оборудование',
+    toLocationId: values.toLocationId ? undefined : 'Выберите, куда переместить оборудование',
+    reason: maxTextLength(values.reason, 200, 'Причина не должна превышать 200 символов'),
+  });
+
 export const TransfersSection: React.FC<Props> = ({
   items,
   equipment,
   locations,
   canManage,
   onCreate,
+  onStatusChange,
 }) => {
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { values, errors, submitting, setValue, reset, submit } =
+    useForm<FormState>(EMPTY_FORM, validateTransfer);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-
-    if (!form.equipmentId) {
-      errs.equipmentId = 'Выберите оборудование';
-    }
-
-    if (!form.toLocationId) {
-      errs.toLocationId = 'Выберите, куда переместить оборудование';
-    }
-
-    if (form.reason.length > 200) {
-      errs.reason = 'Причина не должна превышать 200 символов';
-    }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ ...form, reason: form.reason.trim() });
-      setForm({ ...EMPTY_FORM });
-      setErrors({});
+      await onCreate({ ...current, reason: current.reason.trim() });
+      reset();
     } catch {
       // Ошибку уже показал родительский компонент
     }
-  };
+  });
 
   return (
     <>
@@ -72,11 +63,8 @@ export const TransfersSection: React.FC<Props> = ({
           <div className="form-row">
             <FormField error={errors.equipmentId}>
               <select
-                value={form.equipmentId}
-                onChange={(e) => {
-                  setForm({ ...form, equipmentId: Number(e.target.value) });
-                  if (errors.equipmentId) setErrors({ ...errors, equipmentId: '' });
-                }}
+                value={values.equipmentId}
+                onChange={(e) => setValue('equipmentId', Number(e.target.value))}
               >
                 <option value={0} disabled>Выберите оборудование</option>
                 {equipment.map((item) => (
@@ -89,11 +77,8 @@ export const TransfersSection: React.FC<Props> = ({
 
             <FormField error={errors.toLocationId}>
               <select
-                value={form.toLocationId}
-                onChange={(e) => {
-                  setForm({ ...form, toLocationId: Number(e.target.value) });
-                  if (errors.toLocationId) setErrors({ ...errors, toLocationId: '' });
-                }}
+                value={values.toLocationId}
+                onChange={(e) => setValue('toLocationId', Number(e.target.value))}
               >
                 <option value={0} disabled>Выберите локацию</option>
                 {locations.map((location) => (
@@ -105,15 +90,12 @@ export const TransfersSection: React.FC<Props> = ({
             <FormField error={errors.reason}>
               <input
                 placeholder="Причина / Приказ"
-                value={form.reason}
-                onChange={(e) => {
-                  setForm({ ...form, reason: e.target.value });
-                  if (errors.reason) setErrors({ ...errors, reason: '' });
-                }}
+                value={values.reason}
+                onChange={(e) => setValue('reason', e.target.value)}
               />
             </FormField>
 
-            <button type="submit" className="primary">Переместить</button>
+            <button type="submit" className="primary" disabled={submitting}>Переместить</button>
           </div>
         </form>
       )}
@@ -128,20 +110,35 @@ export const TransfersSection: React.FC<Props> = ({
             <th>Куда</th>
             <th>Оформил</th>
             <th>Статус</th>
+            {canManage && <th>Действия</th>}
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>TR-{item.id}</td>
-              <td>{item.transferDate}</td>
-              <td>{item.invNumber} ({item.equipmentName})</td>
-              <td>{item.fromLocationName || 'Склад'}</td>
-              <td><b>{item.toLocationName}</b></td>
-              <td>{item.transferredBy}</td>
-              <td><span className="badge">{item.status}</span></td>
+          {items.length === 0 ? (
+            <tr>
+              <td colSpan={canManage ? 8 : 7} align="center">Перемещений пока нет</td>
             </tr>
-          ))}
+          ) : (
+            items.map((item) => (
+              <tr key={item.id}>
+                <td>TR-{item.id}</td>
+                <td>{item.transferDate}</td>
+                <td>{item.invNumber} ({item.equipmentName})</td>
+                <td>{item.fromLocationName || 'Склад'}</td>
+                <td><b>{item.toLocationName}</b></td>
+                <td>{item.transferredBy}</td>
+                <td><StatusBadge status={item.status} /></td>
+                {canManage && (
+                  <td>
+                    <StatusActions
+                      actions={getStatusActions('transfer', item.status)}
+                      onChange={(status) => onStatusChange(item.id, status)}
+                    />
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </>

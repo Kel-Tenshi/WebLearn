@@ -10,6 +10,11 @@ const {
 const authMiddleware = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { EQUIPMENT_STATUSES } = require('../constants');
+const {
+  EQUIPMENT_INITIAL_STATUSES,
+  getNextStatuses,
+  canTransition
+} = require('../stateMachine');
 
 const equipmentRouter = express.Router();
 equipmentRouter.use(authMiddleware);
@@ -67,6 +72,12 @@ equipmentRouter.post('/', requireRole('manager', 'admin'), async (req, res) => {
     const { error, data } = validateBody(req.body);
     if (error) return res.status(400).json({ message: error });
 
+    if (!EQUIPMENT_INITIAL_STATUSES.includes(data.status)) {
+      return res.status(400).json({
+        message: `Новое оборудование можно добавить только со статусом: ${EQUIPMENT_INITIAL_STATUSES.join(', ')}`
+      });
+    }
+
     const duplicate = await getEquipmentByInvNumber(data.invNumber);
     if (duplicate) {
       return res.status(409).json({ message: 'Оборудование с таким инв. номером уже существует' });
@@ -87,6 +98,13 @@ equipmentRouter.put('/:id', requireRole('manager', 'admin'), async (req, res) =>
 
     const existing = await getEquipmentById(id);
     if (!existing) return res.status(404).json({ message: 'Оборудование не найдено' });
+
+    if (!canTransition('equipment', existing.status, data.status)) {
+      return res.status(409).json({
+        message: `Недопустимый переход статуса: «${existing.status}» → «${data.status}». ` +
+          `Доступно: ${getNextStatuses('equipment', existing.status).join(', ') || 'нет'}`
+      });
+    }
 
     const duplicate = await getEquipmentByInvNumber(data.invNumber);
     if (duplicate && duplicate.id !== id) {
