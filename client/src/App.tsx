@@ -8,7 +8,7 @@ import { RegisterView } from './components/auth/RegisterView';
 import { EquipmentTab } from './components/equipment/EquipmentTab';
 import { RequestsTab } from './components/requests/RequestsTab';
 import { OperationsTab } from './components/operations/OperationsTab';
-import { DirectoryTab } from './components/DirectoryTab';
+import { DirectoryTab } from './components/directory/DirectoryTab';
 import { UsersTab } from './components/UsersTab';
 import { NotFoundView } from './components/layout/NotFoundView';
 
