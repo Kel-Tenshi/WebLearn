@@ -52,6 +52,31 @@ test('профиль: без авторизации 401, с куками — д�
   assert.equal(me.data.fullName, 'Иванов Иван Иванович');
 });
 
+test('logout сразу отзывает access-token, даже если куку сохранили', async () => {
+  const client = createClient(baseUrl);
+  await client.login('manager', 'manager123');
+
+  const accessCookie = client.cookies
+    .split('; ')
+    .find((pair) => pair.startsWith('accessToken='));
+  assert.ok(accessCookie);
+
+  const before = await client.request('GET', '/user/me', {
+    headers: { cookie: accessCookie },
+  });
+  assert.equal(before.status, 200);
+
+  const loggedOut = await client.delete('/auth/logout');
+  assert.equal(loggedOut.status, 200);
+
+  // Тот же access-token, что был до выхода, больше не принимается
+  const after = await client.request('GET', '/user/me', {
+    headers: { cookie: accessCookie },
+  });
+  assert.equal(after.status, 401);
+  assert.match(after.data.message, /Сессия завершена/);
+});
+
 test('refresh: продлевает сессию, logout — отзывает', async () => {
   const client = createClient(baseUrl);
   await client.login('admin', 'admin123');

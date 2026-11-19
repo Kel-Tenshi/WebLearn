@@ -52,10 +52,8 @@ module.exports = {
         transferStatus
       );
 
-      // Если перемещение принято — обновляем текущее местонахождение оборудования
-      if (transferStatus === 'Принято') {
-        await getDb().run('UPDATE equipment SET locationId = ? WHERE id = ?', toLocationId, equipmentId);
-      }
+      // Местонахождение оборудования меняется только при принятии перемещения
+      // в updateTransferStatus, а не при создании записи.
 
       return {
         id: res.lastID,

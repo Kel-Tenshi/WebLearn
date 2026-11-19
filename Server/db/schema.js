@@ -146,6 +146,14 @@ async function createSchema(db) {
       notes TEXT
     )
   `);
+
+  // 13. Отозванные access-токены (по jti), чтобы logout действовал сразу
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS revoked_access_tokens (
+      jti TEXT PRIMARY KEY,
+      expiresAt INTEGER NOT NULL
+    )
+  `);
 }
 
 module.exports = {

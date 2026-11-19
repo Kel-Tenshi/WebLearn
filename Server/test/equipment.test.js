@@ -86,6 +86,28 @@ test('оборудование: создание, дубликат и удале
   assert.equal(removedAgain.status, 404);
 });
 
+test('оборудование: редактирование не стирает дату ввода в эксплуатацию', async () => {
+  const created = await manager.client.post('/api/equipment', {
+    invNumber: 'ИНВ-DATE-001',
+    name: 'Прибор с датой',
+    commissioningDate: '2022-05-06',
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.data.commissioningDate, '2022-05-06');
+
+  // Форма редактирования не отправляет commissioningDate — поле должно сохраниться
+  const updated = await manager.client.put(`/api/equipment/${created.data.id}`, {
+    invNumber: 'ИНВ-DATE-001',
+    name: 'Прибор с датой',
+    status: 'Работает',
+  });
+  assert.equal(updated.status, 200);
+
+  const saved = await manager.client.get(`/api/equipment/${created.data.id}`);
+  assert.equal(saved.status, 200);
+  assert.equal(saved.data.commissioningDate, '2022-05-06');
+});
+
 test('оборудование: запрет недопустимого перехода статуса', async () => {
   const requestBody = {
     invNumber: 'ИНВ-000001',

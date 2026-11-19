@@ -25,6 +25,7 @@ const initDb = async () => {
 
 // Порядок важен: сначала зависимые таблицы, затем справочники
 const RESET_TABLES = [
+  'revoked_access_tokens',
   'tokens',
   'inventory_audits',
   'orders',

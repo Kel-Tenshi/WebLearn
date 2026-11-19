@@ -2,10 +2,16 @@ const express = require('express');
 const authRouter = express.Router();
 const { verifyPassword, isLegacyPasswordHash } = require('../utils/passwords');
 const { getUserByLogin, getUserById, updateUserPassword } = require('../db/users');
-const { saveRefreshToken, deleteByToken, getUserIdByToken } = require('../db/tokens');
+const {
+  saveRefreshToken,
+  deleteByToken,
+  getUserIdByToken,
+  revokeAccessToken
+} = require('../db/tokens');
 const {
   generateAccessToken,
   generateRefreshToken,
+  verifyAccessToken,
   verifyRefreshToken
 } = require('../utils/jwt');
 const {
@@ -126,9 +132,17 @@ authRouter.post('/refresh', async (req, res) => {
   }
 });
 
-// Выход: удаление refresh-токена из базы и очистка кук в браузере
+// Выход: отзываем access-токен, удаляем refresh-токен из базы и очищаем куки
 authRouter.delete('/logout', async (req, res) => {
   try {
+    const accessToken = req.cookies[COOKIE_ACCESS_NAME];
+    if (accessToken) {
+      const { valid, decoded } = verifyAccessToken(accessToken);
+      if (valid && decoded) {
+        await revokeAccessToken(decoded.jti, decoded.exp);
+      }
+    }
+
     const refreshToken = req.cookies[COOKIE_REFRESH_NAME];
     if (refreshToken) {
       await deleteByToken(refreshToken);

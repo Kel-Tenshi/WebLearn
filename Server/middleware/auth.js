@@ -1,5 +1,5 @@
 const { verifyAccessToken, verifyRefreshToken, generateAccessToken } = require('../utils/jwt');
-const { getUserIdByToken } = require('../db/tokens');
+const { getUserIdByToken, isAccessTokenRevoked } = require('../db/tokens');
 const { getUserById } = require('../db/users');
 const {
   COOKIE_ACCESS_NAME,
@@ -16,6 +16,13 @@ async function authMiddleware(req, res, next) {
     if (accessToken) {
       const { valid, decoded } = verifyAccessToken(accessToken);
       if (valid && decoded) {
+        // Токен мог быть отозван при выходе — проверяем до чтения пользователя
+        if (await isAccessTokenRevoked(decoded.jti)) {
+          res.clearCookie(COOKIE_ACCESS_NAME);
+          res.clearCookie(COOKIE_REFRESH_NAME);
+          return res.status(401).json({ message: 'Сессия завершена. Выполните вход' });
+        }
+
         const currentUser = await getUserById(decoded.id);
         if (!currentUser) {
           res.clearCookie(COOKIE_ACCESS_NAME);

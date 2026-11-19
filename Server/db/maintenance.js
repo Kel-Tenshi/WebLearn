@@ -49,6 +49,10 @@ module.exports = {
     description
   }) => {
     try {
+      const startDateValue = startDate || new Date().toISOString().slice(0, 10);
+      const statusValue = status || 'Запланировано';
+      const costValue = cost || 0;
+
       const res = await getDb().run(`
         INSERT INTO maintenance_logs (equipmentId, maintenanceType, performer, cost, startDate, endDate, status, description)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -56,10 +60,10 @@ module.exports = {
         equipmentId,
         maintenanceType,
         performer,
-        cost || 0,
-        startDate || new Date().toISOString().slice(0, 10),
+        costValue,
+        startDateValue,
         endDate || null,
-        status || 'Запланировано',
+        statusValue,
         description || null
       );
 
@@ -71,11 +75,11 @@ module.exports = {
         equipmentId,
         maintenanceType,
         performer,
-        cost,
-        startDate,
-        endDate,
-        status,
-        description
+        cost: costValue,
+        startDate: startDateValue,
+        endDate: endDate || null,
+        status: statusValue,
+        description: description || null
       };
     } catch (error) {
       console.error('db/maintenance addMaintenanceLog:', error);

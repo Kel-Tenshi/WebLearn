@@ -48,6 +48,7 @@ test('ТО: создание, валидация и влияние на стат
   assert.equal(created.status, 201);
   assert.equal(created.data.performer, 'manager');
   assert.equal(created.data.status, 'Запланировано');
+  assert.match(created.data.startDate, /^\d{4}-\d{2}-\d{2}$/);
 
   const saved = await manager.client.get('/api/operations/maintenance');
   const savedItem = saved.data.find((item) => item.id === created.data.id);

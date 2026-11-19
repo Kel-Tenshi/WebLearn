@@ -23,7 +23,8 @@ const equipmentRouter = express.Router();
 equipmentRouter.use(authMiddleware);
 
 function validateBody(body) {
-  const { invNumber, serialNumber, name, categoryId, locationId, status, purchaseCost, commissioningDate } = body || {};
+  const source = body || {};
+  const { invNumber, serialNumber, name, categoryId, locationId, status, purchaseCost, commissioningDate } = source;
 
   if (!invNumber || !String(invNumber).trim()) {
     return { error: 'Укажите инвентарный номер' };
@@ -37,6 +38,10 @@ function validateBody(body) {
     return { error: `Недопустимый статус. Допустимо: ${EQUIPMENT_STATUSES.join(', ')}` };
   }
 
+  // Если поле не передано, оставляем его без изменений (важно для PUT:
+  // форма редактирования не отправляет дату ввода в эксплуатацию).
+  const hasCommissioningDate = Object.prototype.hasOwnProperty.call(source, 'commissioningDate');
+
   return {
     data: {
       invNumber: String(invNumber).trim(),
@@ -46,7 +51,7 @@ function validateBody(body) {
       locationId: locationId ? Number(locationId) : null,
       status: cleanStatus,
       purchaseCost: Number(purchaseCost) || 0,
-      commissioningDate: commissioningDate || null
+      commissioningDate: hasCommissioningDate ? commissioningDate || null : undefined
     }
   };
 }
@@ -137,8 +142,15 @@ equipmentRouter.put('/:id', requireRole(...MANAGER_ROLES), async (req, res) => {
       return res.status(409).json({ message: 'Инвентарный номер уже занят другим объектом' });
     }
 
-    await updateEquipment(id, data);
-    res.json({ id, ...data });
+    // Дату ввода в эксплуатацию не затёрли, если её не передали в запросе
+    const updated = {
+      ...data,
+      commissioningDate:
+        data.commissioningDate !== undefined ? data.commissioningDate : existing.commissioningDate
+    };
+
+    await updateEquipment(id, updated);
+    res.json({ id, ...updated });
   } catch (error) {
     if (isForeignKeyError(error)) {
       return res.status(400).json({ message: 'Категория или локация не найдены' });

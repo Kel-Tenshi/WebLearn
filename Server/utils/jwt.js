@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { randomUUID } = require('crypto');
 const {
   JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET,
@@ -6,13 +7,15 @@ const {
   REFRESH_TOKEN_EXPIRES_IN
 } = require('../constants');
 
-// Генерация короткоживущего токена доступа (15 минут)
+// Генерация короткоживущего токена доступа (15 минут).
+// jti нужен, чтобы можно было отозвать конкретный токен при выходе.
 function generateAccessToken(user) {
   return jwt.sign(
     {
       id: user.id,
       login: user.login,
-      role: user.role
+      role: user.role,
+      jti: randomUUID()
     },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRES_IN }

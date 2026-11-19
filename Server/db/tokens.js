@@ -59,5 +59,40 @@ module.exports = {
       console.error('db/tokens saveRefreshToken:', error);
       throw error;
     }
+  },
+
+  // Отозвать access-токен по jti (при выходе). expiresAt — unix-время в секундах.
+  revokeAccessToken: async (jti, expiresAt) => {
+    try {
+      if (!jti || !expiresAt) return;
+
+      // Попутно чистим уже истёкшие записи, чтобы таблица не росла бесконечно
+      const now = Math.floor(Date.now() / 1000);
+      await getDb().run('DELETE FROM revoked_access_tokens WHERE expiresAt <= ?', now);
+
+      await getDb().run(
+        'INSERT OR REPLACE INTO revoked_access_tokens (jti, expiresAt) VALUES (?, ?)',
+        jti,
+        expiresAt
+      );
+    } catch (error) {
+      console.error('db/tokens revokeAccessToken:', error);
+      throw error;
+    }
+  },
+
+  // Проверить, отозван ли access-токен
+  isAccessTokenRevoked: async (jti) => {
+    try {
+      if (!jti) return false;
+      const row = await getDb().get(
+        'SELECT jti FROM revoked_access_tokens WHERE jti = ?',
+        jti
+      );
+      return Boolean(row);
+    } catch (error) {
+      console.error('db/tokens isAccessTokenRevoked:', error);
+      throw error;
+    }
   }
 };

@@ -58,6 +58,8 @@ module.exports = {
   // Добавить новое оборудование с поддержкой внешних ключей
   addEquipment: async ({ invNumber, serialNumber, name, categoryId, locationId, status, purchaseCost, commissioningDate }) => {
     try {
+      const dateValue = commissioningDate || new Date().toISOString().slice(0, 10);
+
       const res = await getDb().run(`
         INSERT INTO ${TABLE_NAME}
           (invNumber, serialNumber, name, categoryId, locationId, status, purchaseCost, commissioningDate)
@@ -70,7 +72,7 @@ module.exports = {
         locationId || null,
         status || 'Работает',
         purchaseCost || 0,
-        commissioningDate || new Date().toISOString().slice(0, 10)
+        dateValue
       );
 
       return {
@@ -82,7 +84,7 @@ module.exports = {
         locationId,
         status,
         purchaseCost,
-        commissioningDate
+        commissioningDate: dateValue
       };
     } catch (error) {
       console.error('db/equipment addEquipment:', error);
