@@ -5,12 +5,13 @@ import { useAlert } from '../../context/AlertContext';
 import { OrdersSection } from './OrdersSection';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const OrdersTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
   const { orders, suppliers, loading, error, reload, create, updateStatus } = useOrders();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
   const handleCreate = async (data: Partial<PurchaseOrder>) => {
     try {

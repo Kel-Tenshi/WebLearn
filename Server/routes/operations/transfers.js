@@ -2,8 +2,10 @@ const express = require('express');
 const requireRole = require('../../middleware/requireRole');
 const transfersDb = require('../../db/transfers');
 const { getEquipmentById } = require('../../db/equipment');
-const { TRANSFER_STATUSES } = require('../../constants');
+const { getLocationById } = require('../../db/locations');
+const { TRANSFER_STATUSES, MANAGER_ROLES } = require('../../constants');
 const { getNextStatuses, canTransition } = require('../../stateMachine');
+const { isForeignKeyError } = require('../../utils/dbErrors');
 
 const router = express.Router();
 
@@ -16,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', requireRole('manager', 'admin'), async (req, res) => {
+router.post('/', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { equipmentId, toLocationId, reason } = req.body || {};
 
@@ -32,6 +34,15 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
       return res.status(409).json({ message: 'Списанное оборудование нельзя перемещать' });
     }
 
+    const targetLocation = await getLocationById(Number(toLocationId));
+    if (!targetLocation) {
+      return res.status(404).json({ message: 'Целевая локация не найдена' });
+    }
+
+    if (equipment.locationId === Number(toLocationId)) {
+      return res.status(400).json({ message: 'Оборудование уже находится в этой локации' });
+    }
+
     const item = await transfersDb.addTransfer({
       equipmentId: Number(equipmentId),
       toLocationId: Number(toLocationId),
@@ -42,12 +53,15 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
 
     res.status(201).json(item);
   } catch (err) {
+    if (isForeignKeyError(err)) {
+      return res.status(400).json({ message: 'Оборудование или локация не найдены' });
+    }
     res.status(500).json({ message: 'Ошибка при оформлении перемещения' });
   }
 });
 
 // Принятие или отклонение перемещения
-router.patch('/:id/status', requireRole('manager', 'admin'), async (req, res) => {
+router.patch('/:id/status', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { status } = req.body || {};
 

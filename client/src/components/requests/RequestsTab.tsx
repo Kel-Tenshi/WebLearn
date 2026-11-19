@@ -6,12 +6,13 @@ import { RequestForm } from './RequestForm';
 import { RequestsTable } from './RequestsTable';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
   const { requests, equipment, loading, error, reload, create, updateStatus } = useRequests();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
   const handleCreate = async (data: Partial<RequestItem>) => {
     try {
@@ -56,7 +57,7 @@ export const RequestsTab: React.FC<{ user: User }> = ({ user }) => {
     <div className="tab-container">
       <h2>Заявки</h2>
 
-      <RequestForm equipment={equipment} onSubmit={handleCreate} />
+      <RequestForm equipment={equipment} canManage={canManage} onSubmit={handleCreate} />
 
       <RequestsTable
         requests={requests}

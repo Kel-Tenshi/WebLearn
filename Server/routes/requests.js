@@ -5,8 +5,10 @@ const {
   addRequest,
   updateRequestStatus
 } = require('../db/requests');
+const { getEquipmentById } = require('../db/equipment');
 const authMiddleware = require('../middleware/auth');
 const { REQUEST_TYPES, REQUEST_PRIORITIES, REQUEST_STATUSES } = require('../constants');
+const { isForeignKeyError } = require('../utils/dbErrors');
 const { getNextStatuses, canTransition } = require('../stateMachine');
 
 const requestsRouter = express.Router();
@@ -45,6 +47,13 @@ requestsRouter.post('/', async (req, res) => {
       cleanApplicant = String(applicant).trim();
     }
 
+    if (equipmentId) {
+      const equipment = await getEquipmentById(Number(equipmentId));
+      if (!equipment) {
+        return res.status(400).json({ message: 'Оборудование не найдено' });
+      }
+    }
+
     const created = await addRequest({
       type,
       title: String(title).trim(),
@@ -55,6 +64,9 @@ requestsRouter.post('/', async (req, res) => {
 
     res.status(201).json(created);
   } catch (error) {
+    if (isForeignKeyError(error)) {
+      return res.status(400).json({ message: 'Оборудование не найдено' });
+    }
     res.status(500).json({ message: 'Ошибка при создании заявки' });
   }
 });

@@ -4,9 +4,11 @@ module.exports = {
   getAllOrders: async () => {
     try {
       return await getDb().all(`
-        SELECT o.*, s.name AS supplierName, s.phone AS supplierPhone
+        SELECT o.*, s.name AS supplierName, s.phone AS supplierPhone,
+               u.fullName AS createdByName
         FROM orders o
         LEFT JOIN suppliers s ON o.supplierId = s.id
+        LEFT JOIN users u ON u.login = o.createdBy
         ORDER BY o.orderDate DESC, o.id DESC
       `);
     } catch (error) {

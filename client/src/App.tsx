@@ -11,10 +11,12 @@ import { RequestsTab } from './components/requests/RequestsTab';
 import { OperationsTab } from './components/operations/OperationsTab';
 import { DirectoryTab } from './components/directory/DirectoryTab';
 import { AuditsTab } from './components/directory/AuditsTab';
+import { ProfileTab } from './components/profile/ProfileTab';
 import { UsersTab } from './components/users/UsersTab';
 import { NotFoundView } from './components/layout/NotFoundView';
 import { ErrorView } from './components/layout/ErrorView';
 import { Loading } from './components/ui/Loading';
+import { isAdminRole } from './utils/roles';
 
 function ProtectedLayout({ user, onLogout }: { user: User | null; onLogout: () => void }) {
   if (!user) {
@@ -110,14 +112,18 @@ function App() {
           <Route path="directory" element={<DirectoryTab user={user} />} />
           <Route path="audits" element={<AuditsTab user={user} />} />
           <Route
+            path="profile"
+            element={<ProfileTab user={user} onUserUpdated={setUser} />}
+          />
+          <Route
             path="users"
             element={
-              user.role === 'admin' ? (
+              isAdminRole(user.role) ? (
                 <UsersTab currentUser={user} />
               ) : (
                 <ErrorView
                   status={403}
-                  message="Раздел «Пользователи» доступен только администратору."
+                  message="Раздел «Пользователи» доступен администратору и владельцу системы."
                 />
               )
             }

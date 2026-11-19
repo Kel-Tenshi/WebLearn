@@ -4,6 +4,7 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   autoComplete?: string;
+  ariaLabel?: string;
 }
 
 const EyeIcon: React.FC = () => (
@@ -44,7 +45,12 @@ const EyeOffIcon: React.FC = () => (
 
 // Поле пароля с кнопкой-«глазиком»:
 // клик переключает видимость, наведение показывает пароль, пока курсор на кнопке.
-export const PasswordInput: React.FC<Props> = ({ value, onChange, autoComplete }) => {
+export const PasswordInput: React.FC<Props> = ({
+  value,
+  onChange,
+  autoComplete,
+  ariaLabel,
+}) => {
   const [visible, setVisible] = useState(false);
   const [hovered, setHovered] = useState(false);
 
@@ -56,6 +62,7 @@ export const PasswordInput: React.FC<Props> = ({ value, onChange, autoComplete }
         type={showPassword ? 'text' : 'password'}
         value={value}
         autoComplete={autoComplete}
+        aria-label={ariaLabel}
         onChange={(e) => onChange(e.target.value)}
       />
       <button

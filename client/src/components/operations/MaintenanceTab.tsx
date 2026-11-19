@@ -5,12 +5,13 @@ import { useAlert } from '../../context/AlertContext';
 import { MaintenanceSection } from './MaintenanceSection';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const MaintenanceTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
   const { maintenance, equipment, loading, error, reload, create, updateStatus } = useMaintenance();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
   const handleCreate = async (data: Partial<MaintenanceLog>) => {
     try {

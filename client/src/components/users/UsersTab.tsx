@@ -84,7 +84,7 @@ export const UsersTab: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         onDelete={handleDelete}
       />
 
-      <ResetDatabaseCard onReset={handleResetDb} />
+      {currentUser.role === 'root' && <ResetDatabaseCard onReset={handleResetDb} />}
     </div>
   );
 };

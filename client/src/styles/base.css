@@ -82,6 +82,74 @@ body {
   background: var(--topbar-hover);
 }
 
+.profile-user {
+  padding: 5px 8px;
+  border-color: transparent !important;
+  color: var(--topbar-ink-muted) !important;
+  font-size: 13px;
+}
+
+.profile-user:hover {
+  color: var(--topbar-ink) !important;
+}
+
+.profile-user strong {
+  color: var(--topbar-ink);
+  font-weight: 600;
+}
+
+/* Профиль пользователя */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.profile-grid .card {
+  margin-bottom: 0;
+}
+
+.profile-grid h3 {
+  margin-top: 0;
+}
+
+.profile-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.profile-meta span {
+  color: var(--ink-muted);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.profile-form .field-wrapper,
+.profile-form .field-control {
+  display: block;
+  width: 100%;
+}
+
+.profile-form input,
+.profile-form select {
+  width: 100%;
+}
+
+.profile-form button[type='submit'] {
+  align-self: flex-start;
+}
+
 /* Переключатель темы: светлая / тёмная / системная */
 .theme-switcher {
   display: inline-flex;
@@ -179,7 +247,7 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 8px;
 }
 
@@ -296,6 +364,17 @@ button.danger-solid:hover {
   color: var(--ink-muted);
 }
 
+.cell-nowrap {
+  white-space: nowrap;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
 .badge {
   display: inline-block;
   padding: 2px 8px;
@@ -309,6 +388,201 @@ button.danger-solid:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
+  align-items: start;
+}
+
+/* Справочники: карточка со счётчиком, формой и аккуратным списком */
+.directory-card {
+  margin-bottom: 0;
+}
+
+.directory-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.directory-card-head h4 {
+  margin: 0;
+}
+
+.directory-card-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.directory-editing {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.directory-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.directory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.directory-form .field-wrapper,
+.directory-form .field-control {
+  display: block;
+  width: 100%;
+}
+
+.directory-form input,
+.directory-form select {
+  width: 100%;
+}
+
+.directory-form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.directory-form-row .field-wrapper {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.directory-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-color: var(--primary-border);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.directory-add:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.directory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.directory-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.directory-item:last-child {
+  border-bottom: none;
+}
+
+.directory-item.is-editing .directory-item-title {
+  color: var(--primary);
+}
+
+.directory-item-text {
+  min-width: 0;
+}
+
+.directory-item-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.icon-action:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.icon-action.danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.directory-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--ink-muted);
+}
+
+.directory-cancel:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.directory-item-title {
+  display: block;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.directory-item-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.directory-empty {
+  margin: 0;
+  padding: 10px 0;
+}
+
+.code-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  color: var(--ink-muted);
+  font-size: 11px;
 }
 
 /* Модальные окна */

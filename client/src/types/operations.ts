@@ -18,6 +18,7 @@ export interface MaintenanceLog {
   description?: string | null;
   equipmentName?: string;
   invNumber?: string;
+  performerName?: string | null;
 }
 
 export type TransferStatus = 'В пути' | 'Принято' | 'Отклонено';
@@ -35,6 +36,7 @@ export interface Transfer {
   invNumber?: string;
   fromLocationName?: string;
   toLocationName?: string;
+  transferredByName?: string | null;
 }
 
 export type OrderStatus = 'Черновик' | 'Согласован' | 'В доставке' | 'Получен' | 'Отменён';
@@ -49,4 +51,5 @@ export interface PurchaseOrder {
   orderDate: string;
   createdBy: string;
   supplierName?: string;
+  createdByName?: string | null;
 }

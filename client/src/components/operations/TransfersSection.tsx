@@ -6,6 +6,7 @@ import { StatusActions } from '../ui/StatusActions';
 import { useForm } from '../../hooks/useForm';
 import { collect, maxTextLength } from '../../utils/validation';
 import { getStatusActions } from '../../config/statusMachine';
+import { displayPerson } from '../../utils/people';
 
 interface Props {
   items: Transfer[];
@@ -61,7 +62,7 @@ export const TransfersSection: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="form-card" noValidate>
           <h3>Оформить перемещение</h3>
           <div className="form-row">
-            <FormField error={errors.equipmentId}>
+            <FormField label="Оборудование" error={errors.equipmentId}>
               <select
                 value={values.equipmentId}
                 onChange={(e) => setValue('equipmentId', Number(e.target.value))}
@@ -75,7 +76,7 @@ export const TransfersSection: React.FC<Props> = ({
               </select>
             </FormField>
 
-            <FormField error={errors.toLocationId}>
+            <FormField label="Куда переместить" error={errors.toLocationId}>
               <select
                 value={values.toLocationId}
                 onChange={(e) => setValue('toLocationId', Number(e.target.value))}
@@ -87,9 +88,9 @@ export const TransfersSection: React.FC<Props> = ({
               </select>
             </FormField>
 
-            <FormField error={errors.reason}>
+            <FormField label="Причина / Приказ" error={errors.reason} className="field-grow">
               <input
-                placeholder="Причина / Приказ"
+                placeholder="Основание перемещения"
                 value={values.reason}
                 onChange={(e) => setValue('reason', e.target.value)}
               />
@@ -121,12 +122,12 @@ export const TransfersSection: React.FC<Props> = ({
           ) : (
             items.map((item) => (
               <tr key={item.id}>
-                <td>TR-{item.id}</td>
-                <td>{item.transferDate}</td>
+                <td className="cell-nowrap">TR-{item.id}</td>
+                <td className="cell-nowrap">{item.transferDate}</td>
                 <td>{item.invNumber} ({item.equipmentName})</td>
                 <td>{item.fromLocationName || 'Склад'}</td>
                 <td><b>{item.toLocationName}</b></td>
-                <td>{item.transferredBy}</td>
+                <td>{displayPerson(item.transferredByName, item.transferredBy)}</td>
                 <td><StatusBadge status={item.status} /></td>
                 {canManage && (
                   <td>

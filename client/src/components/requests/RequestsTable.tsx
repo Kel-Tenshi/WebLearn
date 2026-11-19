@@ -4,6 +4,7 @@ import { StatusBadge } from '../ui/StatusBadge';
 import { StatusActions } from '../ui/StatusActions';
 import { getNextStatuses, getStatusActions } from '../../config/statusMachine';
 import type { StatusAction } from '../../config/statusMachine';
+import { displayPerson } from '../../utils/people';
 
 interface Props {
   requests: RequestItem[];
@@ -55,12 +56,12 @@ export const RequestsTable: React.FC<Props> = ({
         ) : (
           requests.map((request) => (
             <tr key={request.id}>
-              <td>{request.id}</td>
-              <td>{(request.createdAt || '').slice(0, 16)}</td>
+              <td className="cell-nowrap">{request.id}</td>
+              <td className="cell-nowrap">{(request.createdAt || '').slice(0, 16)}</td>
               <td>{request.type}</td>
               <td><b>{request.title}</b></td>
               <td>{request.invNumber ? `${request.invNumber} (${request.equipmentName})` : '—'}</td>
-              <td>{request.applicant}</td>
+              <td>{displayPerson(request.applicantName, request.applicant)}</td>
               <td><span className="badge">{request.priority}</span></td>
               <td><StatusBadge status={request.status} /></td>
               <td>

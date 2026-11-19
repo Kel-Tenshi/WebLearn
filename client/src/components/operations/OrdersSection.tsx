@@ -12,6 +12,7 @@ import {
   requiredText,
 } from '../../utils/validation';
 import { getStatusActions } from '../../config/statusMachine';
+import { displayPerson } from '../../utils/people';
 
 interface Props {
   items: PurchaseOrder[];
@@ -78,36 +79,38 @@ export const OrdersSection: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="form-card" noValidate>
           <h3>Создать заказ на закупку</h3>
           <div className="form-row">
-            <FormField error={errors.orderNumber}>
+            <FormField label="Номер заказа" error={errors.orderNumber}>
               <input
-                placeholder="Номер заказа"
+                placeholder="ORD-2026-001"
                 value={values.orderNumber}
                 onChange={(e) => setValue('orderNumber', e.target.value)}
               />
             </FormField>
 
-            <select
-              value={values.supplierId}
-              onChange={(e) => setValue('supplierId', Number(e.target.value))}
-            >
-              <option value={0}>Без поставщика</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
-              ))}
-            </select>
+            <FormField label="Поставщик">
+              <select
+                value={values.supplierId}
+                onChange={(e) => setValue('supplierId', Number(e.target.value))}
+              >
+                <option value={0}>Без поставщика</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
+                ))}
+              </select>
+            </FormField>
 
-            <FormField error={errors.title}>
+            <FormField label="Наименование" error={errors.title} className="field-grow">
               <input
-                placeholder="Наименование"
+                placeholder="Что закупаем"
                 value={values.title}
                 onChange={(e) => setValue('title', e.target.value)}
               />
             </FormField>
 
-            <FormField error={errors.totalAmount}>
+            <FormField label="Сумма, ₽" error={errors.totalAmount}>
               <input
                 type="number"
-                placeholder="Сумма, ₽"
+                placeholder="0"
                 value={values.totalAmount}
                 onChange={(e) => setValue('totalAmount', Number(e.target.value))}
               />
@@ -126,6 +129,7 @@ export const OrdersSection: React.FC<Props> = ({
             <th>Поставщик</th>
             <th>Наименование</th>
             <th>Сумма</th>
+            <th>Создал</th>
             <th>Статус</th>
             {canManage && <th>Действия</th>}
           </tr>
@@ -133,16 +137,17 @@ export const OrdersSection: React.FC<Props> = ({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={canManage ? 7 : 6} align="center">Заказов пока нет</td>
+              <td colSpan={canManage ? 8 : 7} align="center">Заказов пока нет</td>
             </tr>
           ) : (
             items.map((item) => (
               <tr key={item.id}>
-                <td><code>{item.orderNumber}</code></td>
-                <td>{item.orderDate}</td>
+                <td className="cell-nowrap"><code>{item.orderNumber}</code></td>
+                <td className="cell-nowrap">{item.orderDate}</td>
                 <td>{item.supplierName || '—'}</td>
                 <td><b>{item.title}</b></td>
                 <td>{item.totalAmount.toLocaleString()} ₽</td>
+                <td>{displayPerson(item.createdByName, item.createdBy)}</td>
                 <td><StatusBadge status={item.status} /></td>
                 {canManage && (
                   <td>

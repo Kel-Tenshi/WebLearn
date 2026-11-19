@@ -1,23 +1,23 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
 import { User } from '../../types';
 import { ThemeSwitcher } from '../ui/ThemeSwitcher';
+import { isAdminRole, roleLabel } from '../../utils/roles';
 
 interface Props {
   user: User;
   onLogout: () => void;
 }
 
-const ROLE_LABELS: Record<User['role'], string> = {
-  employee: 'сотрудник',
-  manager: 'руководитель',
-  admin: 'администратор',
-};
-
 export const Navbar: React.FC<Props> = ({ user, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const displayName = user.fullName || user.login;
+  const role = roleLabel(user.role);
+  // Для root ФИО и название роли совпадают — не дублируем подпись
+  const showRole = displayName.toLowerCase() !== role.toLowerCase();
 
   const tabs = [
     { path: '/', label: 'Главная', active: location.pathname === '/' },
@@ -32,7 +32,7 @@ export const Navbar: React.FC<Props> = ({ user, onLogout }) => {
     { path: '/audits', label: 'Инвентаризация', active: location.pathname === '/audits' },
   ];
 
-  if (user.role === 'admin') {
+  if (isAdminRole(user.role)) {
     tabs.push({ path: '/users', label: 'Пользователи', active: location.pathname === '/users' });
   }
 
@@ -54,7 +54,23 @@ export const Navbar: React.FC<Props> = ({ user, onLogout }) => {
       </nav>
       <div className="profile">
         <ThemeSwitcher />
-        <span>{user.login} (<strong>{ROLE_LABELS[user.role]}</strong>)</span>
+        <button
+          type="button"
+          className="profile-user"
+          onClick={() => navigate('/profile')}
+          title="Открыть профиль"
+          aria-label="Открыть профиль"
+        >
+          <UserRound size={14} aria-hidden="true" />
+          <span>
+            {displayName}
+            {showRole && (
+              <>
+                {' '}(<strong>{role.toLowerCase()}</strong>)
+              </>
+            )}
+          </span>
+        </button>
         <button onClick={onLogout}>
           <LogOut size={14} aria-hidden="true" />
           Выйти

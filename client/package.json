@@ -30,6 +30,12 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^@zxcvbn-ts/dictionary-compression/decompress$": "<rootDir>/node_modules/@zxcvbn-ts/dictionary-compression/dist/decompress.cjs"
+    }
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

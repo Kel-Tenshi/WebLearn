@@ -77,8 +77,46 @@
   margin-bottom: 10px;
 }
 
+/* Подсказка с тестовыми аккаунтами: свёрнута, чтобы не отвлекать */
 .demo-hint {
   margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
   font-size: 11px;
   color: var(--ink-faint);
+}
+
+.demo-hint summary {
+  cursor: pointer;
+  list-style: none;
+  text-align: right;
+  color: var(--ink-faint);
+  user-select: none;
+}
+
+.demo-hint summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-hint summary::after {
+  content: '▾';
+  display: inline-block;
+  margin-left: 4px;
+  transition: transform 0.15s ease;
+}
+
+.demo-hint[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.demo-hint summary:hover {
+  color: var(--ink-muted);
+}
+
+.demo-hint-body {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  line-height: 1.6;
 }

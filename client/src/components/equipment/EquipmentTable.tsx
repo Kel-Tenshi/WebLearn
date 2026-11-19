@@ -1,4 +1,5 @@
 import React from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Equipment } from '../../types';
 import { StatusBadge } from '../ui/StatusBadge';
 
@@ -32,8 +33,8 @@ export const EquipmentTable: React.FC<Props> = ({ items, canManage, onEdit, onDe
         ) : (
           items.map((item) => (
             <tr key={item.id}>
-              <td><code>{item.invNumber}</code></td>
-              <td>{item.serialNumber || '—'}</td>
+              <td className="cell-nowrap"><code>{item.invNumber}</code></td>
+              <td className="cell-nowrap">{item.serialNumber || '—'}</td>
               <td><b>{item.name}</b></td>
               <td>{item.categoryName || '—'}</td>
               <td>{item.locationName || '—'}</td>
@@ -41,8 +42,26 @@ export const EquipmentTable: React.FC<Props> = ({ items, canManage, onEdit, onDe
               <td><StatusBadge status={item.status} /></td>
               {canManage && (
                 <td>
-                  <button onClick={() => onEdit(item)}>Изм.</button>
-                  <button onClick={() => onDelete(item.id)} className="danger">Уд.</button>
+                  <div className="table-actions">
+                    <button
+                      type="button"
+                      className="icon-action"
+                      onClick={() => onEdit(item)}
+                      aria-label={`Изменить: ${item.name}`}
+                      title="Изменить"
+                    >
+                      <Pencil size={14} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-action danger"
+                      onClick={() => onDelete(item.id)}
+                      aria-label={`Удалить: ${item.name}`}
+                      title="Удалить"
+                    >
+                      <Trash2 size={14} aria-hidden="true" />
+                    </button>
+                  </div>
                 </td>
               )}
             </tr>

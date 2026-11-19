@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, UserRole } from '../../types';
 import { ErrorView } from './ErrorView';
+import { roleLabel } from '../../utils/roles';
 
 interface Props {
   user: User;
@@ -13,14 +14,16 @@ interface PageSuggestion {
   roles: UserRole[];
 }
 
+const ALL_ROLES: UserRole[] = ['employee', 'manager', 'admin', 'root'];
+
 const PAGES: PageSuggestion[] = [
-  { path: '/', title: 'Главная', roles: ['employee', 'manager', 'admin'] },
-  { path: '/equipment', title: 'Оборудование', roles: ['employee', 'manager', 'admin'] },
-  { path: '/requests', title: 'Заявки', roles: ['employee', 'manager', 'admin'] },
-  { path: '/operations/maintenance', title: 'Операции', roles: ['employee', 'manager', 'admin'] },
-  { path: '/directory', title: 'Справочники', roles: ['employee', 'manager', 'admin'] },
-  { path: '/audits', title: 'Инвентаризация', roles: ['employee', 'manager', 'admin'] },
-  { path: '/users', title: 'Пользователи', roles: ['admin'] },
+  { path: '/', title: 'Главная', roles: ALL_ROLES },
+  { path: '/equipment', title: 'Оборудование', roles: ALL_ROLES },
+  { path: '/requests', title: 'Заявки', roles: ALL_ROLES },
+  { path: '/operations/maintenance', title: 'Операции', roles: ALL_ROLES },
+  { path: '/directory', title: 'Справочники', roles: ALL_ROLES },
+  { path: '/audits', title: 'Инвентаризация', roles: ALL_ROLES },
+  { path: '/users', title: 'Пользователи', roles: ['admin', 'root'] },
 ];
 
 export const NotFoundView: React.FC<Props> = ({ user }) => {
@@ -32,7 +35,9 @@ export const NotFoundView: React.FC<Props> = ({ user }) => {
       <ErrorView
         status={404}
         title="Страница не найдена"
-        message={`Адрес «${location.pathname}» не существует или недоступен для роли «${user.role}».`}
+        message={`Адрес «${location.pathname}» не существует или недоступен для роли «${roleLabel(
+          user.role
+        ).toLowerCase()}».`}
       >
         <div className="error-links">
           {availablePages.map((page) => (

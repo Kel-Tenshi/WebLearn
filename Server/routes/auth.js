@@ -56,7 +56,13 @@ authRouter.post('/login', async (req, res) => {
 
     res.status(200).json({
       ok: true,
-      user: { id: user.id, login: user.login, role: user.role }
+      user: {
+        id: user.id,
+        login: user.login,
+        role: user.role,
+        fullName: user.fullName,
+        departmentId: user.departmentId
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -107,7 +113,13 @@ authRouter.post('/refresh', async (req, res) => {
 
     res.status(200).json({
       ok: true,
-      user: { id: user.id, login: user.login, role: user.role }
+      user: {
+        id: user.id,
+        login: user.login,
+        role: user.role,
+        fullName: user.fullName,
+        departmentId: user.departmentId
+      }
     });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка при обновлении токена' });

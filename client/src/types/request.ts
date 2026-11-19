@@ -19,4 +19,5 @@ export interface RequestItem {
   createdAt: string;
   equipmentName?: string | null;
   invNumber?: string | null;
+  applicantName?: string | null;
 }

@@ -5,13 +5,14 @@ import { useAlert } from '../../context/AlertContext';
 import { TransfersSection } from './TransfersSection';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const TransfersTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
   const { transfers, equipment, locations, loading, error, reload, create, updateStatus } =
     useTransfers();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
   const handleCreate = async (data: {
     equipmentId: number;

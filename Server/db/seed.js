@@ -38,6 +38,7 @@ async function seedDemoData(db) {
 
   // 4. Демо-пользователи
   const demoUsers = [
+    { login: 'root', password: 'root123', role: 'root', fullName: 'Владелец системы', departmentId: 3 },
     { login: 'admin', password: 'admin123', role: 'admin', fullName: 'Администратор Системы', departmentId: 3 },
     { login: 'manager', password: 'manager123', role: 'manager', fullName: 'Иванов Иван Иванович', departmentId: 1 },
     { login: 'user', password: 'user123', role: 'employee', fullName: 'Петров Алексей Сергеевич', departmentId: 2 }

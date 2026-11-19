@@ -83,8 +83,10 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
           <FormField label="Логин:" error={errors.login}>
             <input
               value={login}
+              aria-label="Логин"
               onChange={(e) => {
                 setLogin(e.target.value);
+                if (error) setError('');
                 if (errors.login) setErrors({ ...errors, login: '' });
               }}
             />
@@ -93,9 +95,11 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
           <FormField label="Пароль:" error={errors.password}>
             <PasswordInput
               value={password}
+              ariaLabel="Пароль"
               autoComplete="new-password"
               onChange={(value) => {
                 setPassword(value);
+                if (error) setError('');
 
                 const nextErrors: Record<string, string> = { ...errors, password: '' };
                 if (errors.confirmPassword) nextErrors.confirmPassword = '';
@@ -131,9 +135,11 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
               <FormField label="Подтвердите пароль:" error={errors.confirmPassword}>
                 <PasswordInput
                   value={confirmPassword}
+                  ariaLabel="Подтверждение пароля"
                   autoComplete="new-password"
                   onChange={(value) => {
                     setConfirmPassword(value);
+                    if (error) setError('');
                     if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
                   }}
                 />
@@ -144,8 +150,10 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
           <FormField label="ФИО (необязательно):" error={errors.fullName}>
             <input
               value={fullName}
+              aria-label="ФИО"
               onChange={(e) => {
                 setFullName(e.target.value);
+                if (error) setError('');
                 if (errors.fullName) setErrors({ ...errors, fullName: '' });
               }}
             />

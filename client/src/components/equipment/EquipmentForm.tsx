@@ -116,63 +116,71 @@ export const EquipmentForm: React.FC<Props> = ({
     <form onSubmit={handleSubmit} className="form-card" noValidate>
       <h3>{editingItem ? 'Редактировать оборудование' : 'Добавить оборудование'}</h3>
       <div className="form-row">
-        <FormField error={errors.invNumber}>
+        <FormField label="Инв. номер *" error={errors.invNumber}>
           <input
-            placeholder="Инв. номер *"
+            placeholder="ИНВ-000001"
             value={values.invNumber}
             onChange={(e) => setValue('invNumber', e.target.value)}
           />
         </FormField>
 
-        <FormField error={errors.serialNumber}>
+        <FormField label="Серийный номер" error={errors.serialNumber}>
           <input
-            placeholder="Серийный номер"
+            placeholder="SN-..."
             value={values.serialNumber}
             onChange={(e) => setValue('serialNumber', e.target.value)}
           />
         </FormField>
 
-        <FormField error={errors.name}>
+        <FormField label="Наименование *" error={errors.name} className="field-grow">
           <input
-            placeholder="Наименование *"
+            placeholder="Название оборудования"
             value={values.name}
             onChange={(e) => setValue('name', e.target.value)}
           />
         </FormField>
 
-        <select
-          value={values.categoryId}
-          onChange={(e) => setValue('categoryId', Number(e.target.value))}
-        >
-          <option value={0}>Без категории</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+        <FormField label="Статус">
+          <select
+            value={values.status}
+            onChange={(e) => setValue('status', e.target.value as EquipmentStatus)}
+          >
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+        </FormField>
+      </div>
 
-        <select
-          value={values.locationId}
-          onChange={(e) => setValue('locationId', Number(e.target.value))}
-        >
-          <option value={0}>Без локации</option>
-          {locations.map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
+      <div className="form-row">
+        <FormField label="Категория">
+          <select
+            value={values.categoryId}
+            onChange={(e) => setValue('categoryId', Number(e.target.value))}
+          >
+            <option value={0}>Без категории</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </FormField>
 
-        <select
-          value={values.status}
-          onChange={(e) => setValue('status', e.target.value as EquipmentStatus)}
-        >
-          {statusOptions.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </select>
+        <FormField label="Локация">
+          <select
+            value={values.locationId}
+            onChange={(e) => setValue('locationId', Number(e.target.value))}
+          >
+            <option value={0}>Без локации</option>
+            {locations.map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </select>
+        </FormField>
 
-        <FormField error={errors.purchaseCost}>
+        <FormField label="Стоимость, ₽" error={errors.purchaseCost}>
           <input
             type="number"
-            placeholder="Стоимость"
+            placeholder="0"
             value={values.purchaseCost}
             onChange={(e) => setValue('purchaseCost', Number(e.target.value))}
           />

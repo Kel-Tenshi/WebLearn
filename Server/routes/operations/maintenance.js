@@ -1,8 +1,10 @@
 const express = require('express');
 const requireRole = require('../../middleware/requireRole');
 const maintenanceDb = require('../../db/maintenance');
-const { MAINTENANCE_TYPES, MAINTENANCE_STATUSES } = require('../../constants');
+const { getEquipmentById } = require('../../db/equipment');
+const { MAINTENANCE_TYPES, MAINTENANCE_STATUSES, MANAGER_ROLES } = require('../../constants');
 const { getNextStatuses, canTransition } = require('../../stateMachine');
+const { isForeignKeyError } = require('../../utils/dbErrors');
 
 const router = express.Router();
 
@@ -15,7 +17,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', requireRole('manager', 'admin'), async (req, res) => {
+router.post('/', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { equipmentId, maintenanceType, performer, cost, description } = req.body || {};
 
@@ -25,6 +27,11 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
 
     if (!MAINTENANCE_TYPES.includes(maintenanceType)) {
       return res.status(400).json({ message: 'Недопустимый вид обслуживания' });
+    }
+
+    const equipment = await getEquipmentById(Number(equipmentId));
+    if (!equipment) {
+      return res.status(404).json({ message: 'Оборудование не найдено' });
     }
 
     const item = await maintenanceDb.addMaintenanceLog({
@@ -38,11 +45,14 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
 
     res.status(201).json(item);
   } catch (err) {
+    if (isForeignKeyError(err)) {
+      return res.status(400).json({ message: 'Оборудование не найдено' });
+    }
     res.status(500).json({ message: 'Ошибка при добавлении записи ТО' });
   }
 });
 
-router.patch('/:id/status', requireRole('manager', 'admin'), async (req, res) => {
+router.patch('/:id/status', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { status, endDate } = req.body || {};
 

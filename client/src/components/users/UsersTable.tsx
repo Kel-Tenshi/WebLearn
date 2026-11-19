@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, UserRole } from '../../types';
+import { roleLabel } from '../../utils/roles';
 
 interface Props {
   users: User[];
@@ -8,12 +9,29 @@ interface Props {
   onDelete: (id: number) => void;
 }
 
+// Кем может управлять текущий пользователь:
+// root — всеми, кроме себя; admin — сотрудниками и менеджерами.
+function canManageTarget(actor: User, target: User): boolean {
+  if (actor.id === target.id) return false;
+  if (target.role === 'root') return false;
+  if (target.role === 'admin') return actor.role === 'root';
+  return true;
+}
+
+function assignableRoles(actor: User): UserRole[] {
+  return actor.role === 'root'
+    ? ['employee', 'manager', 'admin']
+    : ['employee', 'manager'];
+}
+
 export const UsersTable: React.FC<Props> = ({
   users,
   currentUser,
   onRoleChange,
   onDelete,
 }) => {
+  const options = assignableRoles(currentUser);
+
   return (
     <table className="data-table">
       <thead>
@@ -30,34 +48,45 @@ export const UsersTable: React.FC<Props> = ({
           <tr>
             <td colSpan={5} align="center">Пользователей пока нет</td>
           </tr>
-        ) : users.map((user) => (
-          <tr key={user.id}>
-            <td>{user.id}</td>
-            <td><b>{user.login}</b></td>
-            <td>{user.fullName || '—'}</td>
-            <td>
-              {user.id === currentUser.id ? (
-                <span>{user.role} (вы)</span>
-              ) : (
-                <select
-                  value={user.role}
-                  onChange={(e) => onRoleChange(user.id, e.target.value as UserRole)}
-                >
-                  <option value="employee">employee (сотрудник)</option>
-                  <option value="manager">manager (руководитель)</option>
-                  <option value="admin">admin (администратор)</option>
-                </select>
-              )}
-            </td>
-            <td>
-              {user.id !== currentUser.id && (
-                <button className="danger" onClick={() => onDelete(user.id)}>
-                  Удалить
-                </button>
-              )}
-            </td>
-          </tr>
-        ))}
+        ) : users.map((user) => {
+          const editable = canManageTarget(currentUser, user);
+          const isSelf = user.id === currentUser.id;
+
+          return (
+            <tr key={user.id}>
+              <td className="cell-nowrap">{user.id}</td>
+              <td className="cell-nowrap"><b>{user.login}</b></td>
+              <td>{user.fullName || '—'}</td>
+              <td>
+                {editable ? (
+                  <select
+                    value={user.role}
+                    onChange={(e) => onRoleChange(user.id, e.target.value as UserRole)}
+                  >
+                    {options.map((role) => (
+                      <option key={role} value={role}>
+                        {roleLabel(role)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span title={user.role === 'root' ? 'Аккаунт защищён от изменений' : undefined}>
+                    {roleLabel(user.role)}
+                    {isSelf && ' (вы)'}
+                    {user.role === 'root' && ' · защищён'}
+                  </span>
+                )}
+              </td>
+              <td>
+                {editable && (
+                  <button className="danger" onClick={() => onDelete(user.id)}>
+                    Удалить
+                  </button>
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

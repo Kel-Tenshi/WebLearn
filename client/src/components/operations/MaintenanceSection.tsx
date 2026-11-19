@@ -6,6 +6,7 @@ import { StatusActions } from '../ui/StatusActions';
 import { useForm } from '../../hooks/useForm';
 import { collect, maxTextLength, nonNegativeNumber } from '../../utils/validation';
 import { getStatusActions } from '../../config/statusMachine';
+import { displayPerson } from '../../utils/people';
 
 interface Props {
   items: MaintenanceLog[];
@@ -18,6 +19,7 @@ interface Props {
 interface FormState {
   equipmentId: number;
   maintenanceType: MaintenanceType;
+  performer: string;
   cost: number;
   description: string;
 }
@@ -25,6 +27,7 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   equipmentId: 0,
   maintenanceType: 'Плановое ТО',
+  performer: '',
   cost: 0,
   description: '',
 };
@@ -32,6 +35,7 @@ const EMPTY_FORM: FormState = {
 const validateMaintenance = (values: FormState) =>
   collect({
     equipmentId: values.equipmentId ? undefined : 'Выберите оборудование',
+    performer: maxTextLength(values.performer, 120, 'Исполнитель не должен превышать 120 символов'),
     cost: nonNegativeNumber(values.cost, 'Стоимость не может быть отрицательной'),
     description: maxTextLength(values.description, 300, 'Описание не должно превышать 300 символов'),
   });
@@ -48,7 +52,11 @@ export const MaintenanceSection: React.FC<Props> = ({
 
   const handleSubmit = submit(async (current) => {
     try {
-      await onCreate({ ...current });
+      await onCreate({
+        ...current,
+        performer: current.performer.trim() || undefined,
+        description: current.description.trim() || undefined,
+      });
       reset();
     } catch {
       // Ошибку уже показал родительский компонент
@@ -61,7 +69,7 @@ export const MaintenanceSection: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="form-card" noValidate>
           <h3>Назначить ТО / Ремонт</h3>
           <div className="form-row">
-            <FormField error={errors.equipmentId}>
+            <FormField label="Оборудование" error={errors.equipmentId}>
               <select
                 value={values.equipmentId}
                 onChange={(e) => setValue('equipmentId', Number(e.target.value))}
@@ -75,27 +83,37 @@ export const MaintenanceSection: React.FC<Props> = ({
               </select>
             </FormField>
 
-            <select
-              value={values.maintenanceType}
-              onChange={(e) => setValue('maintenanceType', e.target.value as MaintenanceType)}
-            >
-              {['Плановое ТО', 'Аварийный ремонт', 'Калибровка/Поверка', 'Модернизация'].map((type) => (
-                <option key={type}>{type}</option>
-              ))}
-            </select>
+            <FormField label="Вид работ">
+              <select
+                value={values.maintenanceType}
+                onChange={(e) => setValue('maintenanceType', e.target.value as MaintenanceType)}
+              >
+                {['Плановое ТО', 'Аварийный ремонт', 'Калибровка/Поверка', 'Модернизация'].map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
+              </select>
+            </FormField>
 
-            <FormField error={errors.cost}>
+            <FormField label="Исполнитель" error={errors.performer}>
+              <input
+                placeholder="ФИО или организация"
+                value={values.performer}
+                onChange={(e) => setValue('performer', e.target.value)}
+              />
+            </FormField>
+
+            <FormField label="Стоимость, ₽" error={errors.cost}>
               <input
                 type="number"
-                placeholder="Стоимость, ₽"
+                placeholder="0"
                 value={values.cost}
                 onChange={(e) => setValue('cost', Number(e.target.value))}
               />
             </FormField>
 
-            <FormField error={errors.description}>
+            <FormField label="Описание работ" error={errors.description} className="field-grow">
               <input
-                placeholder="Описание работ"
+                placeholder="Что нужно сделать"
                 value={values.description}
                 onChange={(e) => setValue('description', e.target.value)}
               />
@@ -127,10 +145,10 @@ export const MaintenanceSection: React.FC<Props> = ({
           ) : (
             items.map((item) => (
               <tr key={item.id}>
-                <td>{item.id}</td>
+                <td className="cell-nowrap">{item.id}</td>
                 <td>{item.invNumber} ({item.equipmentName})</td>
                 <td>{item.maintenanceType}</td>
-                <td>{item.performer}</td>
+                <td>{displayPerson(item.performerName, item.performer)}</td>
                 <td>{item.cost.toLocaleString()} ₽</td>
                 <td>{item.startDate}</td>
                 <td><StatusBadge status={item.status} /></td>

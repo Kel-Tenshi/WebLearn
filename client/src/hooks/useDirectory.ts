@@ -49,5 +49,13 @@ export function useDirectory() {
     createLocation: directoryApi.createLocation,
     createCategory: directoryApi.createCategory,
     createSupplier: directoryApi.createSupplier,
+    updateDepartment: directoryApi.updateDepartment,
+    updateLocation: directoryApi.updateLocation,
+    updateCategory: directoryApi.updateCategory,
+    updateSupplier: directoryApi.updateSupplier,
+    deleteDepartment: directoryApi.deleteDepartment,
+    deleteLocation: directoryApi.deleteLocation,
+    deleteCategory: directoryApi.deleteCategory,
+    deleteSupplier: directoryApi.deleteSupplier,
   };
 }

@@ -10,9 +10,10 @@ module.exports = {
   getRequestsWithEquipment: async (applicant = null) => {
     try {
       let query = `
-        SELECT r.*, e.name AS equipmentName, e.invNumber
+        SELECT r.*, e.name AS equipmentName, e.invNumber, u.fullName AS applicantName
         FROM ${TABLE_NAME} r
         LEFT JOIN equipment e ON r.equipmentId = e.id
+        LEFT JOIN users u ON u.login = r.applicant
       `;
       const params = [];
 

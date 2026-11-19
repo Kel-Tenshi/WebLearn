@@ -7,11 +7,13 @@ module.exports = {
         SELECT t.*,
                e.name AS equipmentName, e.invNumber,
                fl.name AS fromLocationName,
-               tl.name AS toLocationName
+               tl.name AS toLocationName,
+               u.fullName AS transferredByName
         FROM transfers t
         JOIN equipment e ON t.equipmentId = e.id
         LEFT JOIN locations fl ON t.fromLocationId = fl.id
         JOIN locations tl ON t.toLocationId = tl.id
+        LEFT JOIN users u ON u.login = t.transferredBy
         ORDER BY t.transferDate DESC, t.id DESC
       `);
     } catch (error) {

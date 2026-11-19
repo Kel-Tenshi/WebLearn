@@ -7,9 +7,12 @@ const {
   updateEquipment,
   deleteEquipment
 } = require('../db/equipment');
+const { getCategoryById } = require('../db/categories');
+const { getLocationById } = require('../db/locations');
 const authMiddleware = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
-const { EQUIPMENT_STATUSES } = require('../constants');
+const { EQUIPMENT_STATUSES, MANAGER_ROLES } = require('../constants');
+const { isForeignKeyError } = require('../utils/dbErrors');
 const {
   EQUIPMENT_INITIAL_STATUSES,
   getNextStatuses,
@@ -48,6 +51,20 @@ function validateBody(body) {
   };
 }
 
+async function validateReferences(data) {
+  if (data.categoryId) {
+    const category = await getCategoryById(data.categoryId);
+    if (!category) return 'Категория не найдена';
+  }
+
+  if (data.locationId) {
+    const location = await getLocationById(data.locationId);
+    if (!location) return 'Локация не найдена';
+  }
+
+  return null;
+}
+
 equipmentRouter.get('/', async (req, res) => {
   try {
     const items = await getAllEquipment();
@@ -67,10 +84,13 @@ equipmentRouter.get('/:id', async (req, res) => {
   }
 });
 
-equipmentRouter.post('/', requireRole('manager', 'admin'), async (req, res) => {
+equipmentRouter.post('/', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { error, data } = validateBody(req.body);
     if (error) return res.status(400).json({ message: error });
+
+    const referenceError = await validateReferences(data);
+    if (referenceError) return res.status(400).json({ message: referenceError });
 
     if (!EQUIPMENT_INITIAL_STATUSES.includes(data.status)) {
       return res.status(400).json({
@@ -86,15 +106,21 @@ equipmentRouter.post('/', requireRole('manager', 'admin'), async (req, res) => {
     const newItem = await addEquipment(data);
     res.status(201).json(newItem);
   } catch (error) {
+    if (isForeignKeyError(error)) {
+      return res.status(400).json({ message: 'Категория или локация не найдены' });
+    }
     res.status(500).json({ message: 'Ошибка при добавлении оборудования' });
   }
 });
 
-equipmentRouter.put('/:id', requireRole('manager', 'admin'), async (req, res) => {
+equipmentRouter.put('/:id', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { error, data } = validateBody(req.body);
     if (error) return res.status(400).json({ message: error });
+
+    const referenceError = await validateReferences(data);
+    if (referenceError) return res.status(400).json({ message: referenceError });
 
     const existing = await getEquipmentById(id);
     if (!existing) return res.status(404).json({ message: 'Оборудование не найдено' });
@@ -114,11 +140,14 @@ equipmentRouter.put('/:id', requireRole('manager', 'admin'), async (req, res) =>
     await updateEquipment(id, data);
     res.json({ id, ...data });
   } catch (error) {
+    if (isForeignKeyError(error)) {
+      return res.status(400).json({ message: 'Категория или локация не найдены' });
+    }
     res.status(500).json({ message: 'Ошибка при обновлении оборудования' });
   }
 });
 
-equipmentRouter.delete('/:id', requireRole('manager', 'admin'), async (req, res) => {
+equipmentRouter.delete('/:id', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const id = Number(req.params.id);
     const changes = await deleteEquipment(id);

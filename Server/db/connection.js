@@ -7,7 +7,8 @@ let db;
 async function openDb() {
   if (!db) {
     db = await open({
-      filename: path.join(__dirname, 'db.sqlite'),
+      // DB_FILE позволяет тестам работать с отдельной (например, in-memory) базой
+      filename: process.env.DB_FILE || path.join(__dirname, 'db.sqlite'),
       driver: sqlite3.Database
     });
 

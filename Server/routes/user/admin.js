@@ -1,18 +1,19 @@
 const express = require('express');
-const { getUsers, updateUserRole, deleteUser } = require('../../db/users');
+const { getUsers, getUserById, updateUserRole, deleteUser } = require('../../db/users');
 const { resetDb } = require('../../db/db');
 const authMiddleware = require('../../middleware/auth');
 const requireRole = require('../../middleware/requireRole');
 const {
-  USER_ROLES,
+  ASSIGNABLE_ROLES,
+  ADMIN_ROLES,
   COOKIE_ACCESS_NAME,
   COOKIE_REFRESH_NAME
 } = require('../../constants');
 
 const router = express.Router();
 
-// Сброс базы данных к демонстрационному состоянию (только администратор)
-router.post('/reset-db', authMiddleware, requireRole('admin'), async (req, res) => {
+// Сброс базы данных к демонстрационному состоянию (только владелец системы)
+router.post('/reset-db', authMiddleware, requireRole('root'), async (req, res) => {
   try {
     await resetDb();
 
@@ -31,8 +32,8 @@ router.post('/reset-db', authMiddleware, requireRole('admin'), async (req, res) 
   }
 });
 
-// Список всех пользователей (только администратор)
-router.get('/', authMiddleware, requireRole('admin'), async (req, res) => {
+// Список всех пользователей (администратор и владелец системы)
+router.get('/', authMiddleware, requireRole(...ADMIN_ROLES), async (req, res) => {
   try {
     const users = await getUsers();
     res.json(users);
@@ -41,8 +42,9 @@ router.get('/', authMiddleware, requireRole('admin'), async (req, res) => {
   }
 });
 
-// Смена роли пользователя (только администратор)
-router.patch('/:id/role', authMiddleware, requireRole('admin'), async (req, res) => {
+// Смена роли пользователя.
+// admin управляет только сотрудниками и менеджерами, root — ещё и админами.
+router.patch('/:id/role', authMiddleware, requireRole(...ADMIN_ROLES), async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -50,15 +52,31 @@ router.patch('/:id/role', authMiddleware, requireRole('admin'), async (req, res)
     }
 
     const { role } = req.body || {};
-    if (!USER_ROLES.includes(role)) {
+    if (!ASSIGNABLE_ROLES.includes(role)) {
       return res
         .status(400)
-        .json({ message: `Недопустимая роль. Допустимо: ${USER_ROLES.join(', ')}` });
+        .json({ message: `Недопустимая роль. Допустимо: ${ASSIGNABLE_ROLES.join(', ')}` });
     }
 
     // Чтобы администратор случайно не лишил себя прав и не оставил систему без админа
     if (id === req.userId) {
       return res.status(400).json({ message: 'Нельзя изменить собственную роль' });
+    }
+
+    const target = await getUserById(id);
+    if (!target) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    if (target.role === 'root') {
+      return res.status(403).json({ message: 'Аккаунт владельца системы защищён от изменений' });
+    }
+
+    // Обычный администратор не может ни выдать admin, ни понизить администратора
+    if (req.userRole !== 'root' && (target.role === 'admin' || role === 'admin')) {
+      return res.status(403).json({
+        message: 'Управлять администраторами может только владелец системы'
+      });
     }
 
     const changes = await updateUserRole(id, role);
@@ -72,8 +90,9 @@ router.patch('/:id/role', authMiddleware, requireRole('admin'), async (req, res)
   }
 });
 
-// Удаление пользователя (только администратор)
-router.delete('/:id', authMiddleware, requireRole('admin'), async (req, res) => {
+// Удаление пользователя.
+// admin удаляет только сотрудников и менеджеров, root — ещё и админов.
+router.delete('/:id', authMiddleware, requireRole(...ADMIN_ROLES), async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -85,10 +104,22 @@ router.delete('/:id', authMiddleware, requireRole('admin'), async (req, res) => 
       return res.status(400).json({ message: 'Нельзя удалить собственный аккаунт' });
     }
 
-    const changes = await deleteUser(id);
-    if (changes === 0) {
+    const target = await getUserById(id);
+    if (!target) {
       return res.status(404).json({ message: 'Пользователь не найден' });
     }
+
+    if (target.role === 'root') {
+      return res.status(403).json({ message: 'Аккаунт владельца системы защищён от удаления' });
+    }
+
+    if (req.userRole !== 'root' && target.role === 'admin') {
+      return res.status(403).json({
+        message: 'Удалять администраторов может только владелец системы'
+      });
+    }
+
+    await deleteUser(id);
 
     res.json({ message: 'Пользователь успешно удалён' });
   } catch (error) {

@@ -11,13 +11,21 @@ async function authMiddleware(req, res, next) {
   try {
     const accessToken = req.cookies[COOKIE_ACCESS_NAME];
 
-    // 1. Быстрый путь: Access Token валиден (без обращения к БД)
+    // 1. Access Token валиден — сверяем пользователя и роль с БД,
+    // чтобы удаление и смена роли применялись сразу, не дожидаясь истечения токена.
     if (accessToken) {
       const { valid, decoded } = verifyAccessToken(accessToken);
       if (valid && decoded) {
-        req.userId = decoded.id;
-        req.userLogin = decoded.login;
-        req.userRole = decoded.role;
+        const currentUser = await getUserById(decoded.id);
+        if (!currentUser) {
+          res.clearCookie(COOKIE_ACCESS_NAME);
+          res.clearCookie(COOKIE_REFRESH_NAME);
+          return res.status(401).json({ message: 'Пользователь не найден' });
+        }
+
+        req.userId = currentUser.id;
+        req.userLogin = currentUser.login;
+        req.userRole = currentUser.role;
         return next();
       }
     }

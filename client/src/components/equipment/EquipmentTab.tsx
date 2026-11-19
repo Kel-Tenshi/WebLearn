@@ -7,6 +7,7 @@ import { EquipmentForm } from './EquipmentForm';
 import { EquipmentTable } from './EquipmentTable';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
@@ -16,7 +17,7 @@ export const EquipmentTab: React.FC<{ user: User }> = ({ user }) => {
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<Equipment | null>(null);
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
   const handleSave = async (data: Partial<Equipment>) => {
     try {

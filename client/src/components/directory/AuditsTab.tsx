@@ -5,14 +5,15 @@ import { useAlert } from '../../context/AlertContext';
 import { AuditsCard } from './AuditsCard';
 import { Loading } from '../ui/Loading';
 import { ErrorView } from '../layout/ErrorView';
+import { isManagerRole } from '../../utils/roles';
 
 export const AuditsTab: React.FC<{ user: User }> = ({ user }) => {
   const { showAlert, showApiError } = useAlert();
   const { audits, locations, loading, error, reload, create, updateStatus } = useAudits();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
 
-  const handleCreate = async (data: { locationId: number }) => {
+  const handleCreate = async (data: { locationId: number; auditor?: string; notes?: string }) => {
     try {
       await create(data);
       showAlert('Акт инвентаризации создан', 'success');

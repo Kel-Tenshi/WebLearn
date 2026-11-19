@@ -1,8 +1,10 @@
 const express = require('express');
 const requireRole = require('../../middleware/requireRole');
 const auditsDb = require('../../db/audits');
-const { AUDIT_STATUSES } = require('../../constants');
+const { getLocationById } = require('../../db/locations');
+const { AUDIT_STATUSES, MANAGER_ROLES } = require('../../constants');
 const { getNextStatuses, canTransition } = require('../../stateMachine');
+const { isForeignKeyError } = require('../../utils/dbErrors');
 
 const router = express.Router();
 
@@ -15,12 +17,17 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', requireRole('manager', 'admin'), async (req, res) => {
+router.post('/', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { locationId, auditor, notes } = req.body || {};
 
     if (!locationId) {
       return res.status(400).json({ message: 'Выберите локацию для инвентаризации' });
+    }
+
+    const location = await getLocationById(Number(locationId));
+    if (!location) {
+      return res.status(404).json({ message: 'Локация не найдена' });
     }
 
     const item = await auditsDb.addAudit({
@@ -31,11 +38,14 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
 
     res.status(201).json(item);
   } catch (err) {
+    if (isForeignKeyError(err)) {
+      return res.status(400).json({ message: 'Локация не найдена' });
+    }
     res.status(500).json({ message: 'Ошибка при создании акта инвентаризации' });
   }
 });
 
-router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
+router.patch('/:id', requireRole(...MANAGER_ROLES), async (req, res) => {
   try {
     const { status, notes } = req.body || {};
 

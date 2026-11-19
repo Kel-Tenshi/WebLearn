@@ -40,4 +40,5 @@ export interface InventoryAudit {
   status: AuditStatus;
   notes?: string | null;
   locationName?: string;
+  auditorName?: string | null;
 }

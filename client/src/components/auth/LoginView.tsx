@@ -63,8 +63,10 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
           <FormField label="Логин:" error={errors.login}>
             <input
               value={login}
+              aria-label="Логин"
               onChange={(e) => {
                 setLogin(e.target.value);
+                if (error) setError('');
                 if (errors.login) setErrors({ ...errors, login: '' });
               }}
             />
@@ -72,9 +74,11 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
           <FormField label="Пароль:" error={errors.password}>
             <PasswordInput
               value={password}
+              ariaLabel="Пароль"
               autoComplete="current-password"
               onChange={(value) => {
                 setPassword(value);
+                if (error) setError('');
                 if (errors.password) setErrors({ ...errors, password: '' });
               }}
             />
@@ -88,9 +92,15 @@ export const LoginView: React.FC<Props> = ({ onSuccess }) => {
             Нет аккаунта? Зарегистрироваться
           </Link>
         </div>
-        <div className="demo-hint">
-          Тестовые: <b>admin</b> / admin123 | <b>manager</b> / manager123 | <b>user</b> / user123
-        </div>
+        <details className="demo-hint">
+          <summary>Тестовые аккаунты</summary>
+          <div className="demo-hint-body">
+            <div><b>root</b> / root123 — владелец системы</div>
+            <div><b>admin</b> / admin123 — администратор</div>
+            <div><b>manager</b> / manager123 — руководитель</div>
+            <div><b>user</b> / user123 — сотрудник</div>
+          </div>
+        </details>
       </div>
     </div>
   );

@@ -5,11 +5,15 @@ import { StatusBadge } from '../ui/StatusBadge';
 
 interface Props {
   items: RequestItem[];
+  emptyText?: string;
 }
 
-export const RecentRequests: React.FC<Props> = ({ items }) => {
+export const RecentRequests: React.FC<Props> = ({
+  items,
+  emptyText = 'Заявок пока нет.',
+}) => {
   if (items.length === 0) {
-    return <p className="muted">У вас пока нет заявок.</p>;
+    return <p className="muted">{emptyText}</p>;
   }
 
   return (

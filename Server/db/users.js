@@ -61,6 +61,37 @@ module.exports = {
     }
   },
 
+  // Найти пользователя по id вместе с хэшем пароля (для смены пароля)
+  getUserWithPasswordById: async (id) => {
+    try {
+      return await getDb().get(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`, id);
+    } catch (error) {
+      console.error('db/users getUserWithPasswordById:', error);
+      throw error;
+    }
+  },
+
+  // Обновить собственный профиль (ФИО и подразделение)
+  updateUserProfile: async (id, { fullName, departmentId }) => {
+    try {
+      const result = await getDb().run(
+        `UPDATE ${TABLE_NAME} SET fullName = ?, departmentId = ? WHERE id = ?`,
+        fullName || null,
+        departmentId || null,
+        id
+      );
+
+      if (!result.changes) return null;
+      return await getDb().get(
+        `SELECT id, login, role, fullName, departmentId FROM ${TABLE_NAME} WHERE id = ?`,
+        id
+      );
+    } catch (error) {
+      console.error('db/users updateUserProfile:', error);
+      throw error;
+    }
+  },
+
   // Найти пользователя по id (без пароля)
   getUserById: async (id) => {
     try {

@@ -4,9 +4,11 @@ module.exports = {
   getAllAudits: async () => {
     try {
       return await getDb().all(`
-        SELECT a.*, l.name AS locationName, l.building, l.room
+        SELECT a.*, l.name AS locationName, l.building, l.room,
+               u.fullName AS auditorName
         FROM inventory_audits a
         JOIN locations l ON a.locationId = l.id
+        LEFT JOIN users u ON u.login = a.auditor
         ORDER BY a.auditDate DESC, a.id DESC
       `);
     } catch (error) {

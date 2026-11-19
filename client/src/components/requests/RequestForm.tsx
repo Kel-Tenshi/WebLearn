@@ -11,6 +11,7 @@ import {
 
 interface Props {
   equipment: Equipment[];
+  canManage: boolean;
   onSubmit: (data: Partial<RequestItem>) => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ interface FormState {
   equipmentId: number;
   priority: RequestPriority;
   title: string;
+  applicant: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -26,6 +28,7 @@ const EMPTY_FORM: FormState = {
   equipmentId: 0,
   priority: 'Средний',
   title: '',
+  applicant: '',
 };
 
 const validateRequest = (values: FormState) =>
@@ -38,9 +41,10 @@ const validateRequest = (values: FormState) =>
       (values.type === 'Ремонт' || values.type === 'Перемещение') && !values.equipmentId
         ? 'Выберите оборудование для этого типа заявки'
         : undefined,
+    applicant: maxTextLength(values.applicant, 120, 'Заявитель не должен превышать 120 символов'),
   });
 
-export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
+export const RequestForm: React.FC<Props> = ({ equipment, canManage, onSubmit }) => {
   const { values, errors, submitting, setValue, reset, submit } =
     useForm<FormState>(EMPTY_FORM, validateRequest);
 
@@ -50,6 +54,7 @@ export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
         ...current,
         title: current.title.trim(),
         equipmentId: current.equipmentId ? Number(current.equipmentId) : null,
+        applicant: canManage && current.applicant.trim() ? current.applicant.trim() : undefined,
       });
       reset();
     } catch {
@@ -100,6 +105,16 @@ export const RequestForm: React.FC<Props> = ({ equipment, onSubmit }) => {
             onChange={(e) => setValue('title', e.target.value)}
           />
         </FormField>
+
+        {canManage && (
+          <FormField error={errors.applicant}>
+            <input
+              placeholder="Заявитель (по умолчанию — вы)"
+              value={values.applicant}
+              onChange={(e) => setValue('applicant', e.target.value)}
+            />
+          </FormField>
+        )}
 
         <button type="submit" className="primary" disabled={submitting}>Подать заявку</button>
       </div>

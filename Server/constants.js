@@ -2,9 +2,21 @@
 
 const { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } = require('./config/secrets');
 
+// Роли, которые можно назначать через интерфейс (root выдаётся только сидом)
+const ASSIGNABLE_ROLES = ['employee', 'manager', 'admin'];
+
+// Полный доступ к управленческим действиям (root входит во все ветки)
+const MANAGER_ROLES = ['manager', 'admin', 'root'];
+
+// Доступ к разделу «Пользователи»
+const ADMIN_ROLES = ['admin', 'root'];
+
 module.exports = {
   // Роли пользователей
-  USER_ROLES: ['employee', 'manager', 'admin'],
+  USER_ROLES: ['employee', 'manager', 'admin', 'root'],
+  ASSIGNABLE_ROLES,
+  MANAGER_ROLES,
+  ADMIN_ROLES,
 
   // Статусы оборудования
   EQUIPMENT_STATUSES: ['Работает', 'В ремонте', 'Простой', 'Списано', 'На консервации'],

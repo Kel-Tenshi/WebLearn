@@ -1,4 +1,14 @@
 import React from 'react';
+import {
+  ArrowLeftRight,
+  ClipboardCheck,
+  FilePlus,
+  Package,
+  Plus,
+  ShoppingCart,
+  Users,
+  Wrench,
+} from 'lucide-react';
 import { User } from '../../types';
 import { useDashboard } from '../../hooks/useDashboard';
 import { Loading } from '../ui/Loading';
@@ -6,14 +16,9 @@ import { ErrorView } from '../layout/ErrorView';
 import { AttentionList } from './AttentionList';
 import type { AttentionItem } from './AttentionList';
 import { RecentRequests } from './RecentRequests';
-import { QuickLinks } from './QuickLinks';
-import type { QuickLink } from './QuickLinks';
-
-const ROLE_LABELS: Record<User['role'], string> = {
-  employee: 'Сотрудник',
-  manager: 'Руководитель',
-  admin: 'Администратор',
-};
+import { QuickActions } from './QuickActions';
+import type { QuickAction } from './QuickActions';
+import { isAdminRole, isManagerRole, roleLabel } from '../../utils/roles';
 
 const ACTIVE_REQUEST_STATUSES = ['На согласовании', 'Одобрено', 'В работе'];
 const ACTIVE_MAINTENANCE_STATUSES = ['Запланировано', 'Ожидает запчастей', 'В процессе'];
@@ -22,15 +27,21 @@ const ACTIVE_ORDER_STATUSES = ['Черновик', 'Согласован', 'В �
 export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
   const { requests, equipment, maintenance, transfers, orders, loading, error, reload } = useDashboard();
 
-  const canManage = user.role === 'manager' || user.role === 'admin';
+  const canManage = isManagerRole(user.role);
   const myRequests = requests.filter((request) => request.applicant === user.login);
 
-  const recentRequests = [...myRequests]
+  // Руководителям показываем последние заявки по всей системе,
+  // сотруднику — только его собственные.
+  const recentRequests = [...(canManage ? requests : myRequests)]
     .sort((a, b) => {
       const byDate = (b.createdAt || '').localeCompare(a.createdAt || '');
       return byDate !== 0 ? byDate : b.id - a.id;
     })
     .slice(0, 5);
+
+  const displayName = user.fullName || user.login;
+  const roleName = roleLabel(user.role);
+  const nameEqualsRole = displayName.toLowerCase() === roleName.toLowerCase();
 
   const countBy = (values: string[], list: string[]) =>
     list.filter((value) => values.includes(value)).length;
@@ -132,18 +143,61 @@ export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
     }
   }
 
-  const links: QuickLink[] = [
-    { to: '/equipment', title: 'Оборудование', description: 'Реестр техники и статусы' },
-    { to: '/requests', title: 'Заявки', description: 'Создание и согласование' },
-    { to: '/operations/maintenance', title: 'ТО и ремонт', description: 'Планы и журнал работ' },
-    { to: '/operations/transfers', title: 'Перемещения', description: 'Передача между локациями' },
-    { to: '/operations/orders', title: 'Заказы', description: 'Снабжение и поставщики' },
-    { to: '/directory', title: 'Справочники', description: 'Подразделения, локации, категории' },
-    { to: '/audits', title: 'Инвентаризация', description: 'Акты ревизий' },
-  ];
+  const actions: QuickAction[] = canManage
+    ? [
+        {
+          to: '/equipment',
+          title: 'Добавить оборудование',
+          description: 'Открыть форму реестра',
+          icon: Plus,
+        },
+        {
+          to: '/operations/maintenance',
+          title: 'Назначить ТО',
+          description: 'План работ и ремонтов',
+          icon: Wrench,
+        },
+        {
+          to: '/operations/transfers',
+          title: 'Оформить перемещение',
+          description: 'Передача между локациями',
+          icon: ArrowLeftRight,
+        },
+        {
+          to: '/operations/orders',
+          title: 'Создать заказ',
+          description: 'Снабжение и поставщики',
+          icon: ShoppingCart,
+        },
+        {
+          to: '/audits',
+          title: 'Начать инвентаризацию',
+          description: 'Новый акт ревизии',
+          icon: ClipboardCheck,
+        },
+      ]
+    : [
+        {
+          to: '/requests',
+          title: 'Подать заявку',
+          description: 'Ремонт, перемещение, закупка',
+          icon: FilePlus,
+        },
+        {
+          to: '/equipment',
+          title: 'Реестр оборудования',
+          description: 'Статусы и местонахождение',
+          icon: Package,
+        },
+      ];
 
-  if (user.role === 'admin') {
-    links.push({ to: '/users', title: 'Пользователи', description: 'Роли и доступы' });
+  if (isAdminRole(user.role)) {
+    actions.push({
+      to: '/users',
+      title: 'Пользователи',
+      description: 'Роли и доступы',
+      icon: Users,
+    });
   }
 
   if (loading) {
@@ -165,10 +219,14 @@ export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
   return (
     <div className="tab-container home-page">
       <section className="home-hero">
-        <h2>Здравствуйте, {user.fullName || user.login}</h2>
+        <h2>Здравствуйте, {displayName}</h2>
         <p>
-          Вы вошли как <b>{ROLE_LABELS[user.role]}</b>. Ниже — текущая обстановка
-          и быстрый доступ к разделам.
+          {nameEqualsRole ? (
+            <>У вас полный доступ ко всем разделам.</>
+          ) : (
+            <>Вы вошли как <b>{roleName}</b>.</>
+          )}{' '}
+          Ниже — текущая обстановка и быстрые действия.
         </p>
       </section>
 
@@ -180,13 +238,16 @@ export const HomeTab: React.FC<{ user: User }> = ({ user }) => {
 
         <section className="card">
           <h3>Последние заявки</h3>
-          <RecentRequests items={recentRequests} />
+          <RecentRequests
+            items={recentRequests}
+            emptyText={canManage ? 'Заявок пока нет.' : 'У вас пока нет заявок.'}
+          />
         </section>
       </div>
 
       <section className="home-section">
-        <h3>Быстрый переход</h3>
-        <QuickLinks links={links} />
+        <h3>Быстрые действия</h3>
+        <QuickActions actions={actions} />
       </section>
     </div>
   );

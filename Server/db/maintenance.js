@@ -4,9 +4,10 @@ module.exports = {
   getAllMaintenanceLogs: async () => {
     try {
       return await getDb().all(`
-        SELECT m.*, e.name AS equipmentName, e.invNumber
+        SELECT m.*, e.name AS equipmentName, e.invNumber, u.fullName AS performerName
         FROM maintenance_logs m
         JOIN equipment e ON m.equipmentId = e.id
+        LEFT JOIN users u ON u.login = m.performer
         ORDER BY m.startDate DESC, m.id DESC
       `);
     } catch (error) {
