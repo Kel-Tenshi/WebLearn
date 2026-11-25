@@ -12,8 +12,11 @@ jest.mock('../../api', () => ({
 }));
 
 jest.mock('../../hooks/usePasswordStrength', () => ({
-  usePasswordStrength: () => null,
+  usePasswordStrength: jest.fn(),
 }));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { usePasswordStrength } = require('../../hooks/usePasswordStrength');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { authApi } = require('../../api');
@@ -39,6 +42,7 @@ describe('RegisterView', () => {
   beforeEach(() => {
     authApi.register.mockReset();
     authApi.login.mockReset();
+    usePasswordStrength.mockReturnValue({ strength: null, pending: false });
   });
 
   test('валидация: пустая форма', async () => {

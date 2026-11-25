@@ -2,15 +2,20 @@ import React from 'react';
 import { RequestItem, RequestStatus } from '../../types';
 import { StatusBadge } from '../ui/StatusBadge';
 import { StatusActions } from '../ui/StatusActions';
+import { SortHeader } from '../ui/SortHeader';
 import { getNextStatuses, getStatusActions } from '../../config/statusMachine';
 import type { StatusAction } from '../../config/statusMachine';
 import { displayPerson } from '../../utils/people';
+import type { SortDir } from '../../hooks/useTableControls';
 
 interface Props {
   requests: RequestItem[];
   canManage: boolean;
   currentUserLogin: string;
   onStatusChange: (id: number, status: RequestStatus) => void;
+  sortKey?: string | null;
+  sortDir?: SortDir;
+  onSort?: (key: string) => void;
 }
 
 export const RequestsTable: React.FC<Props> = ({
@@ -18,6 +23,9 @@ export const RequestsTable: React.FC<Props> = ({
   canManage,
   currentUserLogin,
   onStatusChange,
+  sortKey,
+  sortDir,
+  onSort,
 }) => {
   const getActions = (request: RequestItem): StatusAction[] => {
     if (canManage) return getStatusActions('request', request.status);
@@ -34,46 +42,48 @@ export const RequestsTable: React.FC<Props> = ({
   };
 
   return (
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>№</th>
-          <th>Дата</th>
-          <th>Тип</th>
-          <th>Тема</th>
-          <th>Оборудование</th>
-          <th>Заявитель</th>
-          <th>Приоритет</th>
-          <th>Статус</th>
-          <th>Действия</th>
-        </tr>
-      </thead>
-      <tbody>
-        {requests.length === 0 ? (
+    <div className="table-scroll">
+      <table className="data-table">
+        <thead>
           <tr>
-            <td colSpan={9} align="center">Заявок пока нет</td>
+            <SortHeader label="№" sortKey="id" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Дата" sortKey="createdAt" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Тип" sortKey="type" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Тема" sortKey="title" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Оборудование" sortKey="equipment" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Заявитель" sortKey="applicant" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Приоритет" sortKey="priority" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Статус" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <th>Действия</th>
           </tr>
-        ) : (
-          requests.map((request) => (
-            <tr key={request.id}>
-              <td className="cell-nowrap">{request.id}</td>
-              <td className="cell-nowrap">{(request.createdAt || '').slice(0, 16)}</td>
-              <td>{request.type}</td>
-              <td><b>{request.title}</b></td>
-              <td>{request.invNumber ? `${request.invNumber} (${request.equipmentName})` : '—'}</td>
-              <td>{displayPerson(request.applicantName, request.applicant)}</td>
-              <td><span className="badge">{request.priority}</span></td>
-              <td><StatusBadge status={request.status} /></td>
-              <td>
-                <StatusActions
-                  actions={getActions(request)}
-                  onChange={(status) => onStatusChange(request.id, status as RequestStatus)}
-                />
-              </td>
+        </thead>
+        <tbody>
+          {requests.length === 0 ? (
+            <tr>
+              <td colSpan={9} align="center">Заявок не найдено</td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+          ) : (
+            requests.map((request) => (
+              <tr key={request.id}>
+                <td className="cell-nowrap">{request.id}</td>
+                <td className="cell-nowrap">{(request.createdAt || '').slice(0, 16)}</td>
+                <td>{request.type}</td>
+                <td><b>{request.title}</b></td>
+                <td>{request.invNumber ? `${request.invNumber} (${request.equipmentName})` : '—'}</td>
+                <td>{displayPerson(request.applicantName, request.applicant)}</td>
+                <td><span className="badge">{request.priority}</span></td>
+                <td><StatusBadge status={request.status} /></td>
+                <td>
+                  <StatusActions
+                    actions={getActions(request)}
+                    onChange={(status) => onStatusChange(request.id, status as RequestStatus)}
+                  />
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };

@@ -21,7 +21,7 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
-  const passwordStrength = usePasswordStrength(password);
+  const { strength: passwordStrength, pending: passwordPending } = usePasswordStrength(password);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -57,6 +57,9 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Пока идёт отложенная проверка пароля, регистрировать нельзя
+    if (passwordPending) return;
 
     if (!validate()) return;
 
@@ -113,17 +116,38 @@ export const RegisterView: React.FC<Props> = ({ onSuccess }) => {
               }}
             />
 
-            {passwordStrength && (
-              <div className="password-strength">
+            {password.length > 0 && (
+              <div
+                className={`password-strength${passwordPending ? ' is-pending' : ''}`}
+                aria-live="polite"
+              >
                 <div className="password-strength-track">
                   <div
-                    className={`password-strength-fill ${passwordStrength.className}`}
-                    style={{ width: passwordStrength.width }}
+                    className={`password-strength-fill ${
+                      passwordPending
+                        ? 'strength-checking'
+                        : passwordStrength?.className || ''
+                    }`}
+                    style={{
+                      width: passwordPending ? '100%' : passwordStrength?.width || '0%',
+                    }}
                   />
                 </div>
-                <div className="password-strength-label">{passwordStrength.label}</div>
-                {passwordStrength.hint && (
-                  <div className="password-strength-hint">{passwordStrength.hint}</div>
+
+                {passwordPending ? (
+                  <div className="password-strength-label password-strength-checking">
+                    <span className="strength-spinner" aria-hidden="true" />
+                    Проверяем пароль…
+                  </div>
+                ) : (
+                  passwordStrength && (
+                    <>
+                      <div className="password-strength-label">{passwordStrength.label}</div>
+                      {passwordStrength.hint && (
+                        <div className="password-strength-hint">{passwordStrength.hint}</div>
+                      )}
+                    </>
+                  )
                 )}
               </div>
             )}

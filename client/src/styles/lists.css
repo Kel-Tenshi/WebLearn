@@ -1,0 +1,180 @@
+/* Поиск, фильтры, сортировка и пагинация списков */
+
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.list-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.list-search svg {
+  position: absolute;
+  left: 10px;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.list-search input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+}
+
+.list-filter {
+  flex: 0 0 auto;
+  max-width: 220px;
+}
+
+.list-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.list-reset:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* Горизонтальная прокрутка широких таблиц вместо «разъезжания» страницы */
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 6px;
+}
+
+/* Сортируемые заголовки */
+.data-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.data-table th.sortable:hover {
+  color: var(--ink);
+  background: var(--surface-3);
+}
+
+.data-table th.sorted {
+  color: var(--primary);
+}
+
+.data-table th.sortable:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.sort-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sort-icon-muted {
+  opacity: 0.45;
+}
+
+/* Пагинация */
+.list-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.list-range {
+  white-space: nowrap;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pager button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pager button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+.pager button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.pager-gap {
+  padding: 0 4px;
+  color: var(--ink-faint);
+}
+
+.page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.page-size select {
+  padding: 4px 8px;
+}
+
+.list-pagination.compact {
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.list-pagination.compact .pager button {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+}
+
+/* Справочники: поиск внутри карточки и прокрутка списка */
+.directory-search {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.directory-list {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}

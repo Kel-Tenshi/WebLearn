@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowUpDown, Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Department, LocationItem } from '../../types';
 import { FormField } from '../ui/FormField';
+import { Pagination } from '../ui/Pagination';
 import { useForm } from '../../hooks/useForm';
+import { useTableControls } from '../../hooks/useTableControls';
 import {
   collect,
   maxTextLength,
@@ -63,6 +65,12 @@ export const LocationsCard: React.FC<Props> = ({
   const { values, errors, submitting, setValue, replace, reset, submit } =
     useForm<FormState>(EMPTY_FORM, validateLocation);
 
+  const controls = useTableControls(items, {
+    search: (item) => [item.name, item.building, item.room, item.departmentName],
+    sorters: { name: (item) => item.name },
+    initialPageSize: 6,
+  });
+
   const startEdit = (item: LocationItem) => {
     setEditingId(item.id);
     replace({
@@ -105,9 +113,31 @@ export const LocationsCard: React.FC<Props> = ({
         <h4>Локации</h4>
         <span className="directory-card-tools">
           {editingId && <span className="directory-editing">редактирование</span>}
-          <span className="directory-count">{items.length}</span>
+          <span className="directory-count">
+            {controls.hasActiveFilters ? `${controls.filteredTotal}/${items.length}` : items.length}
+          </span>
+          <button
+            type="button"
+            className="icon-action"
+            onClick={() => controls.toggleSort('name')}
+            aria-label="Сортировать по названию"
+            title={controls.sortDir === 'asc' ? 'По названию: А → Я' : 'По названию: Я → А'}
+          >
+            <ArrowUpDown size={14} aria-hidden="true" />
+          </button>
         </span>
       </div>
+
+      {items.length > 0 && (
+        <input
+          type="search"
+          className="directory-search"
+          placeholder="Поиск по локациям…"
+          value={controls.search}
+          onChange={(e) => controls.setSearch(e.target.value)}
+          aria-label="Поиск по локациям"
+        />
+      )}
 
       {canManage && (
         <form onSubmit={handleSubmit} className="directory-form" noValidate>
@@ -170,11 +200,13 @@ export const LocationsCard: React.FC<Props> = ({
         </form>
       )}
 
-      {items.length === 0 ? (
-        <p className="muted directory-empty">Локаций пока нет</p>
+      {controls.filteredTotal === 0 ? (
+        <p className="muted directory-empty">
+          {items.length === 0 ? 'Локаций пока нет' : 'Ничего не найдено'}
+        </p>
       ) : (
         <ul className="directory-list">
-          {items.map((item) => (
+          {controls.items.map((item) => (
             <li
               key={item.id}
               className={`directory-item${editingId === item.id ? ' is-editing' : ''}`}
@@ -210,6 +242,21 @@ export const LocationsCard: React.FC<Props> = ({
             </li>
           ))}
         </ul>
+      )}
+
+      {controls.pageCount > 1 && (
+        <Pagination
+          compact
+          page={controls.page}
+          pageCount={controls.pageCount}
+          pageSize={controls.pageSize}
+          total={controls.total}
+          filteredTotal={controls.filteredTotal}
+          from={controls.from}
+          to={controls.to}
+          onPageChange={controls.setPage}
+          onPageSizeChange={controls.setPageSize}
+        />
       )}
     </div>
   );

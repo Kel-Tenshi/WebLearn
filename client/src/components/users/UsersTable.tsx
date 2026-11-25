@@ -1,12 +1,17 @@
 import React from 'react';
 import { User, UserRole } from '../../types';
 import { roleLabel } from '../../utils/roles';
+import { SortHeader } from '../ui/SortHeader';
+import type { SortDir } from '../../hooks/useTableControls';
 
 interface Props {
   users: User[];
   currentUser: User;
   onRoleChange: (id: number, role: UserRole) => void;
   onDelete: (id: number) => void;
+  sortKey?: string | null;
+  sortDir?: SortDir;
+  onSort?: (key: string) => void;
 }
 
 // Кем может управлять текущий пользователь:
@@ -29,26 +34,30 @@ export const UsersTable: React.FC<Props> = ({
   currentUser,
   onRoleChange,
   onDelete,
+  sortKey,
+  sortDir,
+  onSort,
 }) => {
   const options = assignableRoles(currentUser);
 
   return (
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Логин</th>
-          <th>ФИО</th>
-          <th>Роль</th>
-          <th>Действия</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.length === 0 ? (
+    <div className="table-scroll">
+      <table className="data-table">
+        <thead>
           <tr>
-            <td colSpan={5} align="center">Пользователей пока нет</td>
+            <SortHeader label="ID" sortKey="id" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Логин" sortKey="login" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="ФИО" sortKey="fullName" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <SortHeader label="Роль" sortKey="role" activeKey={sortKey} dir={sortDir} onSort={onSort} />
+            <th>Действия</th>
           </tr>
-        ) : users.map((user) => {
+        </thead>
+        <tbody>
+          {users.length === 0 ? (
+            <tr>
+              <td colSpan={5} align="center">Пользователей не найдено</td>
+            </tr>
+          ) : users.map((user) => {
           const editable = canManageTarget(currentUser, user);
           const isSelf = user.id === currentUser.id;
 
@@ -87,7 +96,8 @@ export const UsersTable: React.FC<Props> = ({
             </tr>
           );
         })}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   );
 };

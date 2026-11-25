@@ -10,6 +10,7 @@ import './styles/toasts.css';
 import './styles/error.css';
 import './styles/users.css';
 import './styles/ui.css';
+import './styles/lists.css';
 import './styles/home.css';
 import App from './App';
 import { AlertProvider } from './context/AlertContext';
